@@ -21,12 +21,10 @@ t_log = logging.getLogger("airflow.task")
 _INGESTION_FOLDERS_LOCAL_PATHS = os.getenv("INGESTION_FOLDERS_LOCAL_PATHS")
 
 _WEAVIATE_CONN_ID = os.getenv("WEAVIATE_CONN_ID")
-_WEAVIATE_CLASS_NAME = os.getenv("WEAVIATE_CLASS_NAME")
-_WEAVIATE_VECTORIZER = os.getenv("WEAVIATE_VECTORIZER")
-_WEAVIATE_SCHEMA_PATH = os.getenv("WEAVIATE_SCHEMA_PATH")
+_WEAVIATE_COLLECTION_NAME = os.getenv("WEAVIATE_COLLECTION_NAME")
 
-_CREATE_CLASS_TASK_ID = "create_class"
-_CLASS_ALREADY_EXISTS_TASK_ID = "class_already_exists"
+_CREATE_COLLECTION_TASK_ID = "create_collection"
+_COLLECTION_ALREADY_EXISTS_TASK_ID = "collection_already_exists"
 
 
 @dag(
@@ -51,19 +49,19 @@ def my_first_rag_dag_solution():
     # ---------------------- #
 
     @task.branch
-    def check_class(
+    def check_collection(
         conn_id: str,
-        class_name: str,
-        create_class_task_id: str,
-        class_already_exists_task_id: str,
+        collection_name: str,
+        create_collection_task_id: str,
+        collection_already_exists_task_id: str,
     ) -> str:
         """
-        Check if the target class exists in the Weaviate schema.
+        Check if the target collection exists in the Weaviate schema.
         Args:
             conn_id: The connection ID to use.
-            class_name: The name of the class to check.
-            create_class_task_id: The task ID to execute if the class does not exist.
-            class_already_exists_task_id: The task ID to execute if the class already exists.
+            collection_name: The name of the collection to check.
+            create_collection_task_id: The task ID to execute if the collection does not exist.
+            collection_already_exists_task_id: The task ID to execute if the collection already exists.
         Returns:
             str: Task ID of the next task to execute.
         """
@@ -71,63 +69,58 @@ def my_first_rag_dag_solution():
         # connect to Weaviate using the Airflow connection `conn_id`
         hook = WeaviateHook(conn_id)
 
-        # retrieve the existing schema from the Weaviate instance
-        schema = hook.get_schema()
-        existing_classes = {cls["class"]: cls for cls in schema.get("classes", [])}
+        # check if the collection exists in the Weaviate database
+        collection = hook.get_conn().collections.exists(collection_name)
 
-        # if the target class does not exist yet, we will need to create it
-        if class_name not in existing_classes:
-            t_log.info(f"Class {class_name} does not exist yet.")
-            return create_class_task_id
-        # if the target class exists it does not need to be created
+        if collection:
+            t_log.info(f"Collection {collection_name} already exists.")
+            return collection_already_exists_task_id
         else:
-            return class_already_exists_task_id
+            t_log.info(f"Class {collection_name} does not exist yet.")
+            return create_collection_task_id
 
-    check_class_obj = check_class(
+    check_collection_obj = check_collection(
         conn_id=_WEAVIATE_CONN_ID,
-        class_name=_WEAVIATE_CLASS_NAME,
-        create_class_task_id=_CREATE_CLASS_TASK_ID,
-        class_already_exists_task_id=_CLASS_ALREADY_EXISTS_TASK_ID,
+        collection_name=_WEAVIATE_COLLECTION_NAME,
+        create_collection_task_id=_CREATE_COLLECTION_TASK_ID,
+        collection_already_exists_task_id=_COLLECTION_ALREADY_EXISTS_TASK_ID,
     )
 
     @task
-    def create_class(
-        conn_id: str, class_name: str, vectorizer: str, schema_json_path: str
-    ) -> None:
+    def create_collection(conn_id: str, collection_name: str) -> None:
         """
-        Create a class in the Weaviate schema.
+        Create a collection in the Weaviate schema.
         Args:
             conn_id: The connection ID to use.
-            class_name: The name of the class to create.
-            vectorizer: The vectorizer to use for the class.
+            collection_name: The name of the collection to create.
+            vectorizer: The vectorizer to use for the collection.
             schema_json_path: The path to the schema JSON file.
         """
-        import json
+        from weaviate.classes.config import Configure
 
-        weaviate_hook = WeaviateHook(conn_id)
+        hook = WeaviateHook(conn_id)
 
-        with open(schema_json_path) as f:
-            schema = json.load(f)
-            class_obj = next(
-                (item for item in schema["classes"] if item["class"] == class_name),
-                None,
-            )
-            class_obj["vectorizer"] = vectorizer
+        hook.create_collection(
+            name=collection_name,
+            vectorizer_config=Configure.Vectorizer.text2vec_openai(),
+        )
 
-        weaviate_hook.create_class(class_obj)
-
-    create_class_obj = create_class(
+    create_collection_obj = create_collection(
         conn_id=_WEAVIATE_CONN_ID,
-        class_name=_WEAVIATE_CLASS_NAME,
-        vectorizer=_WEAVIATE_VECTORIZER,
-        schema_json_path=_WEAVIATE_SCHEMA_PATH,
+        collection_name=_WEAVIATE_COLLECTION_NAME,
     )
 
-    class_already_exists = EmptyOperator(task_id=_CLASS_ALREADY_EXISTS_TASK_ID)
+    collection_already_exists = EmptyOperator(
+        task_id=_COLLECTION_ALREADY_EXISTS_TASK_ID
+    )
 
     weaviate_ready = EmptyOperator(task_id="weaviate_ready", trigger_rule="none_failed")
 
-    chain(check_class_obj, [create_class_obj, class_already_exists], weaviate_ready)
+    chain(
+        check_collection_obj,
+        [create_collection_obj, collection_already_exists],
+        weaviate_ready,
+    )
 
     # ----------------------- #
     # Ingest domain knowledge #
@@ -242,7 +235,7 @@ def my_first_rag_dag_solution():
     ingest_data = WeaviateIngestOperator.partial(
         task_id="ingest_data",
         conn_id=_WEAVIATE_CONN_ID,
-        class_name=_WEAVIATE_CLASS_NAME,
+        collection_name=_WEAVIATE_COLLECTION_NAME,
         map_index_template="Ingested files from: {{ task.input_data.to_dict()['folder_path'][0] }}.",
     ).expand(input_data=chunk_text_obj)
 
