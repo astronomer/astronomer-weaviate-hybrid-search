@@ -13,7 +13,7 @@ from include.functions.utils import get_all_files, get_all_checksums, compare_ch
 t_log = logging.getLogger("airflow.task")
 
 _WEAVIATE_CONN_ID = os.getenv("WEAVIATE_CONN_ID")
-_WEAVIATE_COLLECTION_NAME = os.getenv("WEAVIATE_COLLECTION_NAME")
+_WEAVIATE_COLLECTION_NAME = "IMAGE_COLLECTION"
 _AWS_CONN_ID = os.getenv("AWS_CONN_ID")
 _S3_BUCKET = os.getenv("S3_BUCKET")
 _STAGE_FOLDER_NAME = os.getenv("STAGE_FOLDER_NAME")

@@ -1,16 +1,19 @@
 version: '3.1'
+
 services:
+
   scheduler:
     networks:
     - airflow
+
   weaviate:
     image: cr.weaviate.io/semitechnologies/weaviate:1.25.6
     command: "--host 0.0.0.0 --port '8081' --scheme http"
     ports:
-    - "8081:8081"
-    - "50051:50051"
+      - "8081:8081"
+      - "50051:50051"
     volumes:
-    - ${PWD}/include/weaviate/backup:/var/lib/weaviate/backup
+      - ./include/weaviate/backup:/var/lib/weaviate/backup
     environment:
       QUERY_DEFAULTS_LIMIT: 25
       AUTHENTICATION_APIKEY_ENABLED: 'true'
@@ -22,4 +25,34 @@ services:
       BACKUP_FILESYSTEM_PATH: '/var/lib/weaviate/backup'
       CLUSTER_HOSTNAME: 'node1'
     networks:
-    - airflow
+      - airflow
+
+  backend:
+    image: python:3.11-slim
+    command: bash -c "pip install -r /app/requirements.txt && python /app/app.py"
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./webapp/backend:/app
+    environment:
+      WEAVIATE_URL: "http://weaviate:8081"
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    networks:
+      - airflow
+
+  frontend:
+    build:
+      context: ./webapp/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./webapp/frontend:/app
+    depends_on:
+      - backend
+    networks:
+      - airflow
+
+networks:
+  airflow:
+    driver: bridge
