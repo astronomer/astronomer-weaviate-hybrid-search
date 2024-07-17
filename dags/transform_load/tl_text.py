@@ -1,52 +1,50 @@
-"""
-## Simple RAG DAG to ingest new knowledge data into a vector database
-
-This DAG ingests text data from markdown files, chunks the text, and then ingests 
-the chunks into a Weaviate vector database.
-"""
-
 from airflow.decorators import dag, task
+from airflow.datasets import Dataset
+from airflow.io.path import ObjectStoragePath
 from airflow.models.baseoperator import chain
 from airflow.operators.empty import EmptyOperator
 from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
 from airflow.providers.weaviate.operators.weaviate import WeaviateIngestOperator
-from pendulum import datetime, duration
-import os
-import logging
+from pendulum import datetime
 import pandas as pd
+import logging
+import os
+
+from include.functions.utils import read_files_from_path
 
 t_log = logging.getLogger("airflow.task")
 
-# Variables used in the DAG
-_INGESTION_FOLDERS_LOCAL_PATHS = os.getenv("INGESTION_FOLDERS_LOCAL_PATHS")
 
 _WEAVIATE_CONN_ID = os.getenv("WEAVIATE_CONN_ID")
 _WEAVIATE_COLLECTION_NAME = os.getenv("WEAVIATE_COLLECTION_NAME")
-
 _CREATE_COLLECTION_TASK_ID = "create_collection"
 _COLLECTION_ALREADY_EXISTS_TASK_ID = "collection_already_exists"
+_AWS_CONN_ID = os.getenv("AWS_CONN_ID")
+_S3_BUCKET = os.getenv("S3_BUCKET")
+_STAGE_FOLDER_NAME = os.getenv("STAGE_FOLDER_NAME")
+_TYPE_FOLDER_NAME = os.getenv("TEXT_FOLDER_NAME")
+
+OBJECT_STORAGE_SRC = "s3"
+CONN_ID_SRC = _AWS_CONN_ID
+KEY_SRC = _S3_BUCKET + "/" + _STAGE_FOLDER_NAME
+
+BASE_SRC = ObjectStoragePath(
+    f"{OBJECT_STORAGE_SRC}://{KEY_SRC}/{_TYPE_FOLDER_NAME}", conn_id=CONN_ID_SRC
+)
 
 
 @dag(
-    dag_display_name="📚 Ingest Knowledge Base",
-    start_date=datetime(2024, 5, 1),
-    schedule="@daily",
+    dag_display_name="📝 Text Transform and Load to Weaviate",
+    start_date=datetime(2024, 7, 1),
+    schedule=[Dataset(BASE_SRC.as_uri())],
     catchup=False,
-    max_consecutive_failed_dag_runs=5,
-    tags=["RAG"],
-    default_args={
-        "retries": 3,
-        "retry_delay": duration(minutes=5),
-        "owner": "AI Task Force",
-    },
-    doc_md=__doc__,
-    description="Ingest knowledge into the vector database for RAG.",
+    tags=["transform", "load"],
 )
-def my_first_rag_dag_solution():
+def tl_text():
 
-    # ---------------------- #
-    # Set up Weaviate schema #
-    # ---------------------- #
+    # --------------- #
+    # Set up Weaviate #
+    # --------------- #
 
     @task.branch
     def check_collection(
@@ -56,7 +54,7 @@ def my_first_rag_dag_solution():
         collection_already_exists_task_id: str,
     ) -> str:
         """
-        Check if the target collection exists in the Weaviate schema.
+        Check if the target collection exists in the Weaviate collection.
         Args:
             conn_id: The connection ID to use.
             collection_name: The name of the collection to check.
@@ -122,74 +120,41 @@ def my_first_rag_dag_solution():
         weaviate_ready,
     )
 
-    # ----------------------- #
-    # Ingest domain knowledge #
-    # ----------------------- #
+    # ------------------ #
+    # Ingest to Weaviate #
+    # ------------------ #
 
     @task
-    def fetch_ingestion_folders_local_paths(
-        ingestion_folders_local_path: str,
-    ) -> list[str]:
+    def list_folders(path: ObjectStoragePath) -> list[ObjectStoragePath]:
+        """List files in local object storage."""
+        folders = [f for f in path.iterdir() if f.is_dir()]
+        return folders
 
-        # get all the folders in the given location
-        folders = os.listdir(ingestion_folders_local_path)
+    list_folders_obj = list_folders(path=BASE_SRC)
 
-        # return the full path of the folders
-        return [
-            os.path.join(ingestion_folders_local_path, folder) for folder in folders
-        ]
-
-    fetch_ingestion_folders_local_paths_obj = fetch_ingestion_folders_local_paths(
-        ingestion_folders_local_path=_INGESTION_FOLDERS_LOCAL_PATHS
-    )
-
-    # dynamically mapped task
     @task(map_index_template="{{ my_custom_map_index }}")
-    def extract_document_text(ingestion_folder_local_path: str) -> pd.DataFrame:
+    def extract_document_text(path: ObjectStoragePath) -> pd.DataFrame:
         """
-        Extract information from markdown files in a folder.
+        Extract text from markdown files in a folder.
         Args:
             folder_path (str): Path to the folder containing markdown files.
         Returns:
             pd.DataFrame: A list of dictionaries containing the extracted information.
         """
-        files = [
-            f for f in os.listdir(ingestion_folder_local_path) if f.endswith(".md")
-        ]
 
-        titles = []
-        texts = []
+        df = read_files_from_path(path=path, content_type="text", encoding="utf-8")
 
-        for file in files:
-            file_path = os.path.join(ingestion_folder_local_path, file)
-            titles.append(file.split(".")[0])
-
-            with open(file_path, "r", encoding="utf-8") as f:
-                texts.append(f.read())
-
-        document_df = pd.DataFrame(
-            {
-                "folder_path": ingestion_folder_local_path,
-                "title": titles,
-                "text": texts,
-            }
-        )
-
-        t_log.info(f"Number of records: {document_df.shape[0]}")
+        t_log.info(f"Number of records: {df.shape[0]}")
 
         # get the current context and define the custom map index variable
         from airflow.operators.python import get_current_context
 
         context = get_current_context()
-        context["my_custom_map_index"] = (
-            f"Extracted files from: {ingestion_folder_local_path}."
-        )
+        context["my_custom_map_index"] = f"Extracted files from: {path}."
 
-        return document_df
+        return df
 
-    extract_document_text_obj = extract_document_text.expand(
-        ingestion_folder_local_path=fetch_ingestion_folders_local_paths_obj
-    )
+    extract_document_text_obj = extract_document_text.expand(path=list_folders_obj)
 
     # dynamically mapped task
     @task(
@@ -239,14 +204,22 @@ def my_first_rag_dag_solution():
         map_index_template="Ingested files from: {{ task.input_data.to_dict()['folder_path'][0] }}.",
     ).expand(input_data=chunk_text_obj)
 
-    # ---------------- #
-    # Set dependencies #
-    # ---------------- #
+
+    @task(
+        outlets=[
+            Dataset(
+                f"weaviate://{_WEAVIATE_CONN_ID}@{_WEAVIATE_COLLECTION_NAME}/{_TYPE_FOLDER_NAME}"
+            )
+        ]
+    )
+    def ingest_done(ingest_type: str):
+        t_log.info(f"Ingestion of {ingest_type} done!")
 
     chain(
         [chunk_text_obj, weaviate_ready],
         ingest_data,
+        ingest_done(ingest_type=_TYPE_FOLDER_NAME),
     )
 
 
-my_first_rag_dag_solution()
+tl_text()
