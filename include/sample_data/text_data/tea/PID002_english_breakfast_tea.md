@@ -1,0 +1,2 @@
+English Breakfast Tea
+Start your day with the invigorating taste of our English Breakfast Tea, a hearty blend that embodies the essence of a traditional morning cup. Crafted from the finest black tea leaves, this robust blend offers a full-bodied flavor with rich, malty undertones. Ideal for pairing with a hearty breakfast or enjoying on its own, our English Breakfast Tea provides a comforting and energizing experience. Whether you prefer it plain or with a dash of milk and sugar, this classic tea promises to awaken your senses and set a positive tone for the day ahead.

@@ -1,1 +1,0 @@
-All Dogs are good dogs!
