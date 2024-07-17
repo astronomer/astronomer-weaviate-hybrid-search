@@ -4,7 +4,6 @@ from airflow.io.path import ObjectStoragePath
 from airflow.models.baseoperator import chain
 from airflow.operators.empty import EmptyOperator
 from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
-from airflow.providers.weaviate.operators.weaviate import WeaviateIngestOperator
 from pendulum import datetime
 import pandas as pd
 import logging
