@@ -16,7 +16,8 @@ _AWS_CONN_ID = os.getenv("AWS_CONN_ID")
 _S3_BUCKET = os.getenv("S3_BUCKET")
 _INGEST_FOLDER_NAME = os.getenv("INGEST_FOLDER_NAME")
 _STAGE_FOLDER_NAME = os.getenv("STAGE_FOLDER_NAME")
-_TYPE_FOLDER_NAME = os.getenv("IMAGE_FOLDER_NAME")
+
+_IMAGE_FOLDER_NAME = "images"
 
 OBJECT_STORAGE_SRC = "s3"
 CONN_ID_SRC = _AWS_CONN_ID
@@ -36,7 +37,7 @@ BASE_DST = ObjectStoragePath(f"{OBJECT_STORAGE_DST}://{KEY_DST}", conn_id=CONN_I
     start_date=datetime(2024, 7, 1),
     schedule=DatasetOrTimeSchedule(
         timetable=CronTriggerTimetable("0 0 * * *", timezone="UTC"),
-        datasets=[Dataset(BASE_SRC.as_uri() + "/" + _TYPE_FOLDER_NAME)],
+        datasets=[Dataset(BASE_SRC.as_uri() + "/" + _IMAGE_FOLDER_NAME)],
     ),
     catchup=False,
     tags=["ingest"],
@@ -44,26 +45,31 @@ BASE_DST = ObjectStoragePath(f"{OBJECT_STORAGE_DST}://{KEY_DST}", conn_id=CONN_I
 def in_images():
 
     @task
-    def list_ingest_folders(
+    def list_ingest_files(
         base_path: ObjectStoragePath, image_folder: str
     ) -> list[ObjectStoragePath]:
         """List files in remote object storage."""
         path = base_path / image_folder
-        folders = [f for f in path.iterdir() if f.is_dir()]
-        return folders
+        files = [f for f in path.iterdir() if f.is_file()]
+        return files
 
-    @task
+    @task(map_index_template="{{ my_custom_map_index }}")
     def copy_ingest_to_stage(
-        path_src: ObjectStoragePath, base_dst: ObjectStoragePath
+        file: ObjectStoragePath, base_dst: ObjectStoragePath
     ) -> None:
         """Copy a file from remote to local storage.
         The file is streamed in chunks using shutil.copyobj"""
 
-        for f in path_src.iterdir():
-            full_key = base_dst / os.path.join(*f.parts[-3:])
-            f.copy(dst=full_key)
+        full_key = base_dst / os.path.join(*file.parts[-2:])
+        file.copy(dst=full_key)
 
-    @task(outlets=Dataset(BASE_DST.as_uri() + "/" + _TYPE_FOLDER_NAME))
+        # get the current context and define the custom map index variable
+        from airflow.operators.python import get_current_context
+
+        context = get_current_context()
+        context["my_custom_map_index"] = f"Copying: {file.as_uri()}"
+
+    @task(outlets=Dataset(BASE_DST.as_uri() + "/" + _IMAGE_FOLDER_NAME))
     def verify_checksum(
         base_src: ObjectStoragePath,
         base_dst: ObjectStoragePath,
@@ -91,29 +97,25 @@ def in_images():
         )
 
     @task
-    def del_files_from_ingest(
-        base_src: ObjectStoragePath, type_folder_name: str
-    ):
+    def del_files_from_ingest(base_src: ObjectStoragePath, type_folder_name: str):
         path = base_src / type_folder_name
         files = get_all_files(path)
         for f in files:
             f.unlink()
 
-    folders = list_ingest_folders(
-        base_path=BASE_SRC, image_folder=_TYPE_FOLDER_NAME
-    )
+    files = list_ingest_files(base_path=BASE_SRC, image_folder=_IMAGE_FOLDER_NAME)
     copy_ingest_to_stage_obj = copy_ingest_to_stage.partial(base_dst=BASE_DST).expand(
-        path_src=folders
+        file=files
     )
     verify_checksum_obj = verify_checksum(
         base_src=BASE_SRC,
         base_dst=BASE_DST,
-        type_folder_name=_TYPE_FOLDER_NAME,
+        type_folder_name=_IMAGE_FOLDER_NAME,
         folder_name_src=_INGEST_FOLDER_NAME,
         folder_name_dst=_STAGE_FOLDER_NAME,
     )
     del_files_from_ingest_obj = del_files_from_ingest(
-        base_src=BASE_SRC, type_folder_name=_TYPE_FOLDER_NAME
+        base_src=BASE_SRC, type_folder_name=_IMAGE_FOLDER_NAME
     )
 
     chain(copy_ingest_to_stage_obj, verify_checksum_obj, del_files_from_ingest_obj)
