@@ -1,0 +1,106 @@
+[
+    {
+        "title": "DeWalt Circular Saw",
+        "description": "A powerful circular saw from DeWalt, perfect for cutting through wood with precision.",
+        "price": 150.0,
+        "category": "tools",
+        "file_path": "images/greyson-joralemon-CXlls8jm1VI-unsplash.jpg",
+        "uuid": "e85b1f12-addf-444b-9a79-4efbf7176b17"
+    },
+    {
+        "title": "Milwaukee Drill",
+        "description": "A reliable Milwaukee drill with a strong grip, suitable for various construction tasks.",
+        "price": 120.0,
+        "category": "tools",
+        "file_path": "images/kenny-eliason-CuDoRFyTkAQ-unsplash.jpg",
+        "uuid": "142997e6-ef1c-4e76-af9d-58b1e876437b"
+    },
+    {
+        "title": "Power Drill",
+        "description": "A versatile power drill, great for both DIY and professional projects.",
+        "price": 110.0,
+        "category": "tools",
+        "file_path": "images/kumpan-electric-uFxb0WD0waw-unsplash.jpg",
+        "uuid": "aa5d5aef-83ce-4775-9f9e-20c7ff38bd1c"
+    },
+    {
+        "title": "Wrenches Set",
+        "description": "A set of durable wrenches, essential for any mechanic or DIY enthusiast.",
+        "price": 50.0,
+        "category": "tools",
+        "file_path": "images/markus-spiske-cjOAigK9xo0-unsplash.jpg",
+        "uuid": "cc81e229-0701-4734-8228-72498319de78"
+    },
+    {
+        "title": "Cordless Drill",
+        "description": "A cordless drill with a rechargeable battery, ideal for home improvement tasks.",
+        "price": 130.0,
+        "category": "tools",
+        "file_path": "images/sidney-pearce-WRgKwttuP7A-unsplash.jpg",
+        "uuid": "21580c3f-8196-41b7-8ce8-b308ba3469c4"
+    },
+    {
+        "title": "DeWalt 18V Cordless Drill",
+        "description": "A versatile DeWalt cordless drill, perfect for various DIY and professional applications. It features a powerful 18V battery and ergonomic design for comfortable use.",
+        "price": 89.99,
+        "category": "tools",
+        "file_path": "images/syed-hussaini-MXeDE_yCdHQ-unsplash.jpg",
+        "uuid": "470efb90-109e-4146-8891-f8fa3363222f"
+    },
+    {
+        "title": "Ryobi Cordless Miter Saw",
+        "description": "A compact and powerful Ryobi miter saw, ideal for accurate crosscuts and miter cuts in wood, plastic, and other materials. Features an adjustable laser guide for precision.",
+        "price": 139.99,
+        "category": "tools",
+        "file_path": "images/ryno-marais-nvE9bT3CXSg-unsplash.jpg",
+        "uuid": "f8b22bfa-9707-47df-a7d5-bfac99256a8a"
+    },
+    {
+        "title": "Ryobi Cordless Impact Drill",
+        "description": "A high-performance Ryobi cordless impact drill, designed for heavy-duty drilling and driving tasks. Equipped with a brushless motor for increased efficiency and longevity.",
+        "price": 129.99,
+        "category": "tools",
+        "file_path": "images/ryno-marais-mmPwWu9CR_U-unsplash.jpg",
+        "uuid": "9a8e7bd8-9b81-400d-aa67-a57772cdb568"
+    },
+    {
+        "title": "Hilti UD 16 Hammer Drill",
+        "description": "A durable and powerful Hilti UD 16 hammer drill, ideal for drilling into tough materials like concrete and masonry. Features a robust design and comfortable grip.",
+        "price": 159.99,
+        "category": "tools",
+        "file_path": "images/mark-kats-orVi6XachOg-unsplash.jpg",
+        "uuid": "bf7a2c86-42f2-4ca5-8770-aa7a4438cfe8"
+    },
+    {
+        "title": "Sonic Tools Organizer",
+        "description": "A professional-grade Sonic Tools organizer, perfect for keeping your tools neatly arranged and easily accessible. Includes a variety of wrenches and other tools.",
+        "price": 249.99,
+        "category": "tools",
+        "file_path": "images/jonathan-cooper-7sZwThSntdw-unsplash.jpg",
+        "uuid": "812cce12-7649-4784-be28-ba046f8a463c"
+    },
+    {
+        "title": "Wagner Paint Sprayer",
+        "description": "An efficient Wagner paint sprayer, ideal for achieving a smooth, even coat on large surfaces. Suitable for use with a variety of paints and finishes.",
+        "price": 99.99,
+        "category": "tools",
+        "file_path": "images/chris-kursikowski-3StRuXgshSA-unsplash.jpg",
+        "uuid": "394d25e9-0ebc-4e32-82c7-990d122e0559"
+    },
+    {
+        "title": "Electric Drill",
+        "description": "A versatile electric drill, perfect for various drilling and screwing tasks. Features a compact design and easy-to-use controls.",
+        "price": 49.99,
+        "category": "tools",
+        "file_path": "images/fairuz-naufal-zaki-QQTDwZcRTRI-unsplash.jpg",
+        "uuid": "85a88d15-b70b-4eda-9149-61bdef6120ab"
+    },
+    {
+        "title": "Tool Chest with Drawer",
+        "description": "A spacious tool chest with a drawer, ideal for organizing and storing tools and accessories. Durable construction with easy-glide drawer system.",
+        "price": 199.99,
+        "category": "tools",
+        "file_path": "images/eric-wendt-5baiq1Vsxz0-unsplash.jpg",
+        "uuid": "115f52d7-f820-4c39-b662-67ea1d8f05a0"
+    }
+]

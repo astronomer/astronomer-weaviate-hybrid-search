@@ -1,0 +1,162 @@
+[
+    {
+        "title": "Classic Leather Hiking Boots",
+        "description": "Durable leather hiking boots designed for rugged terrains and comfortable outdoor adventures.",
+        "price": 89.99,
+        "category": "sneakers",
+        "file_path": "images/alejandro-luengo-tWcCHjx0dtI-unsplash.jpg",
+        "uuid": "cea11333-79db-44f3-af2b-514c80919b84"
+    },
+    {
+        "title": "Outdoor Adventure Boots",
+        "description": "Sturdy and reliable boots for all your outdoor explorations, offering great grip and ankle support.",
+        "price": 99.99,
+        "category": "sneakers",
+        "file_path": "images/clay-banks-BSL837tTPAw-unsplash.jpg",
+        "uuid": "ff238d7d-37d0-4de6-b687-9e0115a69988"
+    },
+    {
+        "title": "Urban Style Sneakers",
+        "description": "Comfortable and stylish sneakers, perfect for urban adventures and casual wear.",
+        "price": 79.99,
+        "category": "sneakers",
+        "file_path": "images/clint-bustrillos-EpmJBf-kQRE-unsplash.jpg",
+        "uuid": "3a320093-824d-4e03-b697-4dddaf11abf6"
+    },
+    {
+        "title": "Modern Blue Athletic Sneakers",
+        "description": "Sleek and lightweight sneakers designed for running and everyday comfort.",
+        "price": 69.99,
+        "category": "sneakers",
+        "file_path": "images/daniel-octavian-nOeHuXPZKhk-unsplash.jpg",
+        "uuid": "b2c6ba19-52d0-495b-9b3a-866d4a63618f"
+    },
+    {
+        "title": "Sporty Red Knit Sneakers",
+        "description": "Breathable and flexible sneakers with a knit upper, ideal for sports and casual wear.",
+        "price": 74.99,
+        "category": "sneakers",
+        "file_path": "images/devin-avery-_vyHZqcq04w-unsplash.jpg",
+        "uuid": "05051fdf-fd50-4fbd-b3f3-7a20be1b09a0"
+    },
+    {
+        "title": "Cushioned Running Sneakers",
+        "description": "High-performance sneakers with extra cushioning for a comfortable running experience.",
+        "price": 84.99,
+        "category": "sneakers",
+        "file_path": "images/domino-studio-164_6wVEHfI-unsplash.jpg",
+        "uuid": "01e1c4ba-2d31-43a4-9f45-168af8b6adbf"
+    },
+    {
+        "title": "Minimalist Black Sneakers",
+        "description": "Simple and elegant black sneakers, perfect for a sleek and modern look.",
+        "price": 59.99,
+        "category": "sneakers",
+        "file_path": "images/hipkicks-LdhTorI9T-o-unsplash.jpg",
+        "uuid": "7342ea4d-1884-43e3-a6da-785d40165af0"
+    },
+    {
+        "title": "High-Top Athletic Sneakers",
+        "description": "Durable high-top sneakers offering great ankle support, ideal for sports and active wear.",
+        "price": 89.99,
+        "category": "sneakers",
+        "file_path": "images/imani-bahati-LxVxPA1LOVM-unsplash.jpg",
+        "uuid": "fb04bb7c-354f-4be4-abfe-1b459dc9516e"
+    },
+    {
+        "title": "Trail Running Sneakers",
+        "description": "Specialized trail running sneakers with enhanced grip and support for outdoor activities.",
+        "price": 79.99,
+        "category": "sneakers",
+        "file_path": "images/irwan-rosyadi-fcXNWy4KDrs-unsplash.jpg",
+        "uuid": "40bfa299-d555-4403-b895-7e32f5d0d7fe"
+    },
+    {
+        "title": "All-Terrain Hiking Boots",
+        "description": "Robust and versatile hiking boots, perfect for various terrains and weather conditions.",
+        "price": 109.99,
+        "category": "sneakers",
+        "file_path": "images/kamil-klyta-oLrNONUN7sk-unsplash.jpg",
+        "uuid": "0aad4dbb-2335-4948-9f7e-94950f5444b8"
+    },
+    {
+        "title": "Eco-Friendly Knit Sneakers",
+        "description": "Comfortable and eco-friendly knit sneakers made with sustainable materials, perfect for casual outings.",
+        "price": 84.99,
+        "category": "sneakers",
+        "file_path": "images/kristian-egelund-wmdcUQ0CJ4c-unsplash.jpg",
+        "uuid": "f41a3a01-4d1a-4743-8ce7-9a992c5876ed"
+    },
+    {
+        "title": "Camouflage Hiking Boots",
+        "description": "Sturdy hiking boots with a camouflage design, ideal for adventurous hikes and outdoor activities.",
+        "price": 129.99,
+        "category": "sneakers",
+        "file_path": "images/leo_visions-MI1fVtQf2XU-unsplash.jpg",
+        "uuid": "b48cc08c-6ec6-42d0-916d-461da93bc955"
+    },
+    {
+        "title": "Retro Style Sneakers",
+        "description": "Classic retro sneakers with a modern twist, featuring a vibrant color palette and comfortable fit.",
+        "price": 79.99,
+        "category": "sneakers",
+        "file_path": "images/linda-xu-fUEP0djb1hA-unsplash.jpg",
+        "uuid": "de07391b-d56b-41d7-b5e9-f0a84c3e4c04"
+    },
+    {
+        "title": "All-White Chunky Sneakers",
+        "description": "Bold and stylish chunky sneakers in a clean all-white design, perfect for making a statement.",
+        "price": 89.99,
+        "category": "sneakers",
+        "file_path": "images/mehdi-thomas-boutdarine-OVUrzAAMTdg-unsplash.jpg",
+        "uuid": "07b3e741-5c9e-4999-9d2d-3939f717b275"
+    },
+    {
+        "title": "Urban Explorer Sneakers",
+        "description": "Durable sneakers designed for urban exploration, featuring a mix of materials and a modern aesthetic.",
+        "price": 99.99,
+        "category": "sneakers",
+        "file_path": "images/mnz-Srj5F1y7p0k-unsplash.jpg",
+        "uuid": "35e7620b-5ba6-4109-bf53-a9d436523fa8"
+    },
+    {
+        "title": "Minimalist Athletic Sneakers",
+        "description": "Lightweight and versatile athletic sneakers with a minimalist design, suitable for various activities.",
+        "price": 79.99,
+        "category": "sneakers",
+        "file_path": "images/nikita-kachanovsky-ad_0wMHtvlU-unsplash.jpg",
+        "uuid": "9d8dff50-8b0a-4ffa-b431-e551911a1804"
+    },
+    {
+        "title": "Vibrant Multi-Color Sneakers",
+        "description": "Bright and colorful sneakers that add a pop of color to any outfit, perfect for casual wear.",
+        "price": 74.99,
+        "category": "sneakers",
+        "file_path": "images/ryan-plomp-jvoZ-Aux9aw-unsplash.jpg",
+        "uuid": "a7850b17-6014-41b9-b050-7bed2478a385"
+    },
+    {
+        "title": "Classic Blue Stripe Sneakers",
+        "description": "Timeless sneakers featuring classic blue stripes, designed for everyday comfort and style.",
+        "price": 89.99,
+        "category": "sneakers",
+        "file_path": "images/shyam-mishra-zuo1zb6mEcY-unsplash.jpg",
+        "uuid": "2865e27c-0000-47e5-9cdc-ea3482595814"
+    },
+    {
+        "title": "Air Max Running Sneakers",
+        "description": "High-performance running sneakers with air cushioning, offering superior comfort and support.",
+        "price": 119.99,
+        "category": "sneakers",
+        "file_path": "images/tom-radetzki-trdk1R0F3tg-unsplash.jpg",
+        "uuid": "1734b884-445b-459b-8f8f-e7634ceb6f7f"
+    },
+    {
+        "title": "Bold Red High-Top Sneakers",
+        "description": "Eye-catching red high-top sneakers with a sleek design, perfect for adding a bold touch to your outfit.",
+        "price": 99.99,
+        "category": "sneakers",
+        "file_path": "images/wengang-zhai-_fOL6ebfECQ-unsplash.jpg",
+        "uuid": "839d89c1-fa88-48de-ab47-022957a53573"
+    }
+]

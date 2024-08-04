@@ -1,0 +1,90 @@
+[
+    {
+        "title": "Irrigation System",
+        "description": "A high-efficiency irrigation system for maintaining lush, green fields. Ideal for agricultural use, ensuring even water distribution across large areas.",
+        "price": 3500.0,
+        "category": "outdoor power equipment",
+        "file_path": "images/abdulla-dhahri-qspCBrzC09E-unsplash.jpg",
+        "uuid": "6a9d94da-1042-40db-b33a-d3846f71d73f"
+    },
+    {
+        "title": "Lawn Mower Tractor",
+        "description": "A powerful lawn mower tractor designed for large lawns and commercial landscapes. Features a comfortable seat and easy-to-use controls.",
+        "price": 4200.0,
+        "category": "outdoor power equipment",
+        "file_path": "images/adlan-D5yUNyV30oE-unsplash.jpg",
+        "uuid": "5676fe5a-5c17-46b3-9c00-e01a350f9457"
+    },
+    {
+        "title": "Push Lawn Mower",
+        "description": "A reliable push lawn mower with a robust engine and durable design. Perfect for small to medium-sized lawns.",
+        "price": 250.0,
+        "category": "outdoor power equipment",
+        "file_path": "images/andres-siimon-zfwyrIA6bFw-unsplash.jpg",
+        "uuid": "d9793d9a-7939-4540-aa31-cc241b43bf4f"
+    },
+    {
+        "title": "Angle Grinder",
+        "description": "Versatile angle grinder suitable for a variety of cutting and grinding tasks. Features a powerful motor and ergonomic handle.",
+        "price": 80.0,
+        "category": "outdoor power equipment",
+        "file_path": "images/diogo-cardoso-B3kl6W9pKyQ-unsplash.jpg",
+        "uuid": "a2407290-fe0b-4189-8218-4354eb21e822"
+    },
+    {
+        "title": "Riding Lawn Mower",
+        "description": "High-performance riding lawn mower for large lawns. Offers superior maneuverability and a comfortable seating arrangement.",
+        "price": 3200.0,
+        "category": "outdoor power equipment",
+        "file_path": "images/elias-null-eGQ-ceQTsxI-unsplash.jpg",
+        "uuid": "9b027e9f-6d92-4a6d-bb16-11c1ae5e4e2d"
+    },
+    {
+        "title": "Zero-Turn Lawn Mower",
+        "description": "A commercial-grade zero-turn lawn mower designed for efficiency and precision. Ideal for professional landscaping and large properties.",
+        "price": 5600.0,
+        "category": "outdoor power equipment",
+        "file_path": "images/erik-mclean-FVtq-Gfn6zY-unsplash.jpg",
+        "uuid": "74d61aba-8450-40fe-b7f8-7480689583db"
+    },
+    {
+        "title": "Electric Weed Trimmer",
+        "description": "An electric weed trimmer perfect for trimming grass and weeds around gardens and pathways. Lightweight and easy to use.",
+        "price": 150.0,
+        "category": "outdoor power equipment",
+        "file_path": "images/erik-mclean-NGyPubeFHF8-unsplash.jpg",
+        "uuid": "d1221047-391a-461a-b772-6ba100f336f6"
+    },
+    {
+        "title": "Reel Lawn Mower",
+        "description": "An eco-friendly reel lawn mower that provides a clean and precise cut without the need for fuel or electricity. Ideal for small lawns.",
+        "price": 90.0,
+        "category": "outdoor power equipment",
+        "file_path": "images/j-dean-KXOSTcqGrOg-unsplash.jpg",
+        "uuid": "cbe4d634-918d-4f55-a502-61b1f4cb6750"
+    },
+    {
+        "title": "Electric Chainsaw",
+        "description": "A powerful electric chainsaw designed for cutting through thick branches and trees. Features a safety lock and automatic chain lubrication.",
+        "price": 120.0,
+        "category": "outdoor power equipment",
+        "file_path": "images/michael-kahn-CWYxsqROgwo-unsplash.jpg",
+        "uuid": "15d82588-1636-4653-83d5-5e20847d4fe7"
+    },
+    {
+        "title": "Garden Tractor",
+        "description": "A versatile garden tractor suitable for various landscaping tasks. Equipped with a powerful engine and durable build for long-lasting performance.",
+        "price": 4800.0,
+        "category": "outdoor power equipment",
+        "file_path": "images/ryan-nicoll-Su0SedcyOkQ-unsplash.jpg",
+        "uuid": "11e0e7bb-a866-4bef-8305-6d36357b80dd"
+    },
+    {
+        "title": "Vintage Push Lawn Mower",
+        "description": "A classic push lawn mower perfect for small lawns. This manual mower is easy to use and requires no gas or electricity.",
+        "price": 75.0,
+        "category": "outdoor power equipment",
+        "file_path": "images/jeremy-boley-zRCNMoW-goc-unsplash.jpg",
+        "uuid": "eb0caaa2-af22-4359-91fa-da6ef37b36aa"
+    }
+]

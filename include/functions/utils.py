@@ -1,6 +1,7 @@
 from airflow.io.path import ObjectStoragePath
 import logging
 import pandas as pd
+import json
 
 t_log = logging.getLogger("airflow.task")
 
@@ -51,51 +52,15 @@ def read_files_from_path(
 
     files = [f for f in path.rglob("*") if f.is_file()]
 
-    titles = []
-    contents = []
+    list_of_df = []
 
     for f in files:
         bytes = f.read_block(offset=0, length=None)
         content = bytes.decode(encoding)
+        data_list = json.loads(content)
 
-        titles.append(f.name)
-        contents.append(content)
+        df = pd.DataFrame(data_list)
 
-    df = pd.DataFrame(
-        {
-            "folder_path": path.path,
-            "title": titles,
-            content_type: contents,
-        }
-    )
+        list_of_df.append(df)
 
-    return df
-
-
-def read_and_encode_img(
-    path: ObjectStoragePath, content_type: str, encoding: str
-) -> pd.DataFrame:
-    """Reads and encodes img from remote storage and returns as a dataframe."""
-    import base64
-
-    files = [f for f in path.rglob("*") if f.is_file()]
-
-    titles = []
-    contents = []
-
-    for f in files:
-        bytes = f.read_block(offset=0, length=None)
-        encoded_image = base64.b64encode(bytes).decode("utf-8")
-
-        titles.append(f.name)
-        contents.append(encoded_image)
-
-    df = pd.DataFrame(
-        {
-            "folder_path": path.path,
-            "title": titles,
-            content_type: contents,
-        }
-    )
-
-    return df
+    return pd.concat(list_of_df, ignore_index=True)
