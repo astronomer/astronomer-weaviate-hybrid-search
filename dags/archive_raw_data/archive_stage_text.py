@@ -13,12 +13,12 @@ from include.functions.utils import get_all_files, get_all_checksums, compare_ch
 t_log = logging.getLogger("airflow.task")
 
 _WEAVIATE_CONN_ID = os.getenv("WEAVIATE_CONN_ID")
-_WEAVIATE_COLLECTION_NAME = os.getenv("WEAVIATE_COLLECTION_NAME")
+_WEAVIATE_COLLECTION_NAME = "Products"
 _AWS_CONN_ID = os.getenv("AWS_CONN_ID")
 _S3_BUCKET = os.getenv("S3_BUCKET")
 _STAGE_FOLDER_NAME = os.getenv("STAGE_FOLDER_NAME")
 _ARCHIVE_FOLDER_NAME = os.getenv("ARCHIVE_FOLDER_NAME")
-_TYPE_FOLDER_NAME = os.getenv("TEXT_FOLDER_NAME")
+_PRODUCT_INFO_FOLDER_NAME = "product_info"
 
 OBJECT_STORAGE_SRC = "s3"
 CONN_ID_SRC = _AWS_CONN_ID
@@ -38,7 +38,7 @@ BASE_DST = ObjectStoragePath(f"{OBJECT_STORAGE_DST}://{KEY_DST}", conn_id=CONN_I
     start_date=datetime(2024, 7, 1),
     schedule=[
         Dataset(
-            f"weaviate://{_WEAVIATE_CONN_ID}@{_WEAVIATE_COLLECTION_NAME}/{_TYPE_FOLDER_NAME}"
+            f"weaviate://{_WEAVIATE_CONN_ID}@{_WEAVIATE_COLLECTION_NAME}/"
         )
     ],
     catchup=False,
@@ -66,7 +66,7 @@ def archive_stage_text():
             full_key = base_dst / os.path.join(*f.parts[-3:])
             f.copy(dst=full_key)
 
-    @task(outlets=Dataset(BASE_DST.as_uri() + "/" + _TYPE_FOLDER_NAME))
+    @task(outlets=Dataset(BASE_DST.as_uri() + "/" + _PRODUCT_INFO_FOLDER_NAME))
     def verify_checksum(
         base_src: ObjectStoragePath,
         base_dst: ObjectStoragePath,
@@ -100,19 +100,19 @@ def archive_stage_text():
         for f in files:
             f.unlink()
 
-    folders = list_ingest_folders(base_path=BASE_SRC, image_folder=_TYPE_FOLDER_NAME)
+    folders = list_ingest_folders(base_path=BASE_SRC, image_folder=_PRODUCT_INFO_FOLDER_NAME)
     copy_ingest_to_stage_obj = copy_ingest_to_stage.partial(base_dst=BASE_DST).expand(
         path_src=folders
     )
     verify_checksum_obj = verify_checksum(
         base_src=BASE_SRC,
         base_dst=BASE_DST,
-        type_folder_name=_TYPE_FOLDER_NAME,
+        type_folder_name=_PRODUCT_INFO_FOLDER_NAME,
         folder_name_src=_STAGE_FOLDER_NAME,
         folder_name_dst=_ARCHIVE_FOLDER_NAME,
     )
     del_files_from_ingest_obj = del_files_from_ingest(
-        base_src=BASE_SRC, type_folder_name=_TYPE_FOLDER_NAME
+        base_src=BASE_SRC, type_folder_name=_PRODUCT_INFO_FOLDER_NAME
     )
 
     chain(copy_ingest_to_stage_obj, verify_checksum_obj, del_files_from_ingest_obj)
