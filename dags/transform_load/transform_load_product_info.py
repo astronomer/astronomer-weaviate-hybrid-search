@@ -16,7 +16,7 @@ t_log = logging.getLogger("airflow.task")
 
 # TODO: clean up env vars
 _WEAVIATE_CONN_ID = os.getenv("WEAVIATE_CONN_ID")
-_WEAVIATE_COLLECTION_NAME = "PRODUCTS"
+_WEAVIATE_COLLECTION_NAME = "Products"
 _CREATE_COLLECTION_TASK_ID = "create_collection"
 _COLLECTION_ALREADY_EXISTS_TASK_ID = "collection_already_exists"
 _AWS_CONN_ID = os.getenv("AWS_CONN_ID")
@@ -53,10 +53,7 @@ BASE_SRC_SNEAKERS = ObjectStoragePath(
 @dag(
     dag_display_name="📝 Text Transform and Load to Weaviate",
     start_date=datetime(2024, 7, 1),
-    schedule=(
-        Dataset(BASE_SRC_SNEAKERS.as_uri())
-        | Dataset(BASE_SRC.as_uri() + "/" + _PRODUCT_INFO_FOLDER_NAME)
-    ),
+    schedule=(Dataset(BASE_SRC_SNEAKERS.as_uri()) | Dataset(BASE_SRC.as_uri())),
     catchup=False,
     tags=["transform", "load"],
 )
@@ -120,7 +117,7 @@ def transform_load_product_info():
         hook = WeaviateHook(conn_id)
 
         hook.create_collection(
-            name="PRODUCTS",
+            name="Products",
             vectorizer_config=wvcc.Configure.Vectorizer.text2vec_openai(model="ada"),
             generative_config=wvcc.Configure.Generative.openai(
                 model="gpt-4-1106-preview"
@@ -196,11 +193,11 @@ def transform_load_product_info():
     ingest_data = WeaviateIngestOperator.partial(
         task_id="ingest_data",
         conn_id=_WEAVIATE_CONN_ID,
-        collection_name="PRODUCTS",
+        collection_name="Products",
         map_index_template="Ingested files from: {{ task.input_data.to_dict()['category'][0] }}.",
     ).expand(input_data=extract_document_text_obj)
 
-    @task(outlets=[Dataset(f"weaviate://{_WEAVIATE_CONN_ID}@PRODUCTS/")])
+    @task(outlets=[Dataset(f"weaviate://{_WEAVIATE_CONN_ID}@Products/")])
     def ingest_done():
         t_log.info(f"Ingestion done!")
 

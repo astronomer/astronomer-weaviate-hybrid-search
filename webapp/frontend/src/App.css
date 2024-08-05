@@ -1,30 +1,496 @@
+/* Add this at the top of the file to import the Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap');
+
+html, body, #root, .App {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .App {
   text-align: center;
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 600;
+  font-style: normal;
+  flex: 1; /* Allows the App to grow and fill the available space */
+}
+
+.logo-container {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.logo-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-left: 10px; /* Add spacing between the logo and the text */
+}
+
+.top-banner {
+  background-color: #74dbbf;
+  color: #01491f;
+  padding: 2px; /* Reduced padding for less thickness */
+  text-align: center;
+  width: 100%; /* Full width */
+  position: fixed; /* Fixed position to stay at the top */
+  top: 0;
+  left: 0;
+  z-index: 1000; /* Ensure it stays on top */
 }
 
 .App-header {
-  background-color: #282c34;
-  padding: 10px;
-  color: white;
-  font-size: 1.5em; 
-}
-
-h1 {
-  font-size: 1.5em; 
-}
-
-.CheckCollection {
-  margin-top: 20px; 
-}
-
-input[type="text"] {
-  padding: 10px;
-  margin: 10px;
-  font-size: 1em;
-}
-
-button {
+  background-color: #fff;
   padding: 10px 20px;
-  font-size: 1em;
-  margin: 10px;
+  border-bottom: 1px solid #e6e6e6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 60px; /* Adjust for fixed top banner height */
+}
+
+.navbar {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo-image {
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
+}
+
+.logo-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+}
+
+.search-bar input {
+  width: 300px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.search-bar button {
+  padding: 10px 20px;
+  border: 1px solid #74dbbf;
+  background-color: #fff;
+  color: #74dbbf;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.search-bar button:hover {
+  background-color: #e0ffe9;
+  color: #11b97e;
+}
+
+.main-content {
+  display: flex;
+  flex: 1; /* Allows the main-content to grow and fill the available space */
+  margin-top: 20px;
+}
+
+.sidebar {
+  width: 200px;
+  padding: 20px;
+  border-right: 1px solid #e6e6e6;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  margin: 10px 0;
+}
+
+.sidebar ul li a {
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+}
+
+.sidebar ul li a:hover {
+  color: #0070c9;
+}
+
+main {
+  flex-grow: 1;
+  padding: 20px;
+}
+
+.hero-image img {
+  width: 100%;
+  height: auto;
+  margin-bottom: 20px;
+}
+
+.featured-products {
+  text-align: left;
+}
+
+.featured-products h2 {
+  margin-top: 0;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 20px;
+}
+
+.product {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: left;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.product:hover {
+  transform: translateY(-10px); /* Slight lift on hover */
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2); /* Deeper shadow on hover */
+}
+
+.product img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%; /* Ensures the image is displayed as a circle */
+  margin-left: 0px;
+}
+
+.product-details {
+  flex-grow: 1;
+}
+
+.product-details h3 {
+  font-size: 1.2em;
+  margin: 10px 0;
+}
+
+.product-details p {
+  font-size: 0.9em;
+  color: #666;
+  margin: 0;
+}
+
+.product-details p:last-of-type {
+  font-size: 1.1em;
+  color: #000;
+  margin-top: 5px;
+}
+
+
+
+.App-footer {
+  background-color: #333;
+  color: #fff;
+  padding: 20px 0;
+  text-align: left;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+}
+
+.footer-section {
+  width: 30%;
+}
+
+.footer-section h4 {
+  margin-top: 0;
+  font-size: 18px;
+  border-bottom: 1px solid #555;
+  padding-bottom: 10px;
+}
+
+.footer-section p, .footer-section ul {
+  margin: 10px 0;
+  line-height: 1.6;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-section ul li {
+  margin: 5px 0;
+}
+
+.footer-section ul li a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.footer-section ul li a:hover {
+  text-decoration: underline;
+}
+
+.social-media {
+  display: flex;
+  gap: 10px;
+}
+
+/* Other styles */
+
+/* CSS for cropping images */
+.product img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ensures the image covers the box while maintaining aspect ratio */
+}
+
+.product-image {
+  width: 50px;
+  height: 50px;
+  overflow: hidden; /* Ensures that the overflowing parts of the image are hidden */
+  display: inline-block; /* Keeps the image inline */
+}
+
+/* CSS Grid layout for 3 columns */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 20px;
+}
+
+/* Styles for product tiles */
+.product {
+  background-color: #fff; /* White background */
+  border-radius: 10px; /* Rounded corners */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  overflow: hidden; /* Clip overflow */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
+  text-align: left; /* Left align text */
+  padding: 20px;
+  display: flex; /* Use flexbox for layout */
+  align-items: center; /* Center align items vertically */
+  justify-content: space-between; /* Space between elements */
+}
+
+.product:hover {
+  transform: translateY(-10px); /* Slight lift on hover */
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2); /* Deeper shadow on hover */
+}
+
+/* Styles for product images */
+.product-image {
+  width: 100px;
+  height: 100px;
+  margin-left: 20px; /* Space between text and image */
+  border-radius: 50%; /* Circular image */
+  overflow: hidden; /* Clip overflow */
+  flex-shrink: 0; /* Prevent image from shrinking */
+}
+
+/* Styles for product text container */
+.product-details {
+  flex-grow: 1; /* Allow text container to grow */
+}
+
+/* Styles for product title */
+.product-details h3 {
+  font-size: 1.2em;
+  margin: 10px 0;
+}
+
+/* Styles for product description */
+.product-details p {
+  font-size: 0.9em;
+  color: #666;
+  margin: 0;
+}
+
+/* Additional styles for the advanced search form */
+.advanced-search {
+  overflow: hidden;
+  transition: max-height 0.5s ease-in-out;
+  max-height: 0;
+  opacity: 0;
+}
+
+.advanced-search.expanded {
+  max-height: 500px; /* Adjust this value based on the expected height of the content */
+  opacity: 1;
+}
+
+.advanced-search.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+.advanced-search-bar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.advanced-search-bar input[type="text"] {
+  width: 70%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.advanced-search-bar button {
+  padding: 10px 20px;
+  border: 1px solid #74dbbf;
+  background-color: #fff;
+  color: #74dbbf;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.advanced-search-bar button:hover {
+  background-color: #e0ffe9;
+  color: #11b97e;
+}
+
+.advanced-search-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.advanced-search-options label {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 150px;
+}
+
+.advanced-search-options input[type="number"],
+.advanced-search-options select,
+.advanced-search-options input[type="range"] {
+  margin-top: 5px;
+  padding: 5px;
+}
+
+.advanced-search-options input[type="range"] {
+  vertical-align: middle;
+}
+
+.toggle-advanced-search {
+  padding: 10px 20px;
+  border: 1px solid #74dbbf;
+  background-color: #fff;
+  color: #74dbbf;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  margin-bottom: 20px;
+}
+
+.toggle-advanced-search:hover {
+  background-color: #e0ffe9;
+  color: #11b97e;
+}
+
+.search-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-results-header h2 {
+  margin: 0;
+}
+
+/* Ensure this part is included in your CSS */
+/* Ensure this part is included in your CSS */
+.hero-image img {
+  width: 100%;
+  height: auto;
+}
+
+.featured-products {
+  text-align: left;
+  margin: 20px 0;
+}
+
+.featured-products h2 {
+  margin-top: 0;
+}
+
+.feat-product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.feat-product {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: left;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.feat-product:hover {
+  transform: translateY(-10px); /* Slight lift on hover */
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2); /* Deeper shadow on hover */
+}
+
+.feat-product img {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.feat-product-details {
+  text-align: center;
+}
+
+.feat-product-details h3 {
+  margin: 10px 0 5px;
+  font-size: 18px;
+}
+
+.feat-product-details p {
+  font-size: 16px;
+  color: #333;
 }

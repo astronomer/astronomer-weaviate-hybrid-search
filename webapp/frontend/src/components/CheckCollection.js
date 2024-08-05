@@ -1,32 +1,40 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 
-function CheckCollection() {
-  const [collectionName, setCollectionName] = useState('');
-  const [result, setResult] = useState(null);
+const CheckCollection = ({ query }) => {
+  const [results, setResults] = useState([]);
 
-  const handleCheck = async () => {
+  useEffect(() => {
+    if (query.trim() !== '') {
+      searchProducts(query);
+    }
+  }, [query]);
+
+  const searchProducts = async (query) => {
     try {
-      const response = await axios.post('http://localhost:5000/check-collection', { collection_name: collectionName });
-      setResult(response.data.exists ? 'Collection exists' : 'Collection does not exist');
+      const response = await fetch(`http://localhost:5000/search?query=${query}`);
+      const data = await response.json();
+      setResults(data);
     } catch (error) {
-      setResult(`Error: ${error.response ? error.response.data.error : error.message}`);
+      console.error('Error fetching search results:', error);
     }
   };
 
   return (
-    <div>
-      <h2>Check Collection</h2>
-      <input
-        type="text"
-        value={collectionName}
-        onChange={(e) => setCollectionName(e.target.value)}
-        placeholder="Enter collection name"
-      />
-      <button onClick={handleCheck}>Check</button>
-      {result && <p>{result}</p>}
+    <div className="check-collection">
+      {results.length > 0 ? (
+        <div className="results">
+          {results.map((product) => (
+            <div key={product.id} className="product">
+              <h2>{product.title}</h2>
+              <p>{product.description}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p>No results to display</p>
+      )}
     </div>
   );
-}
+};
 
 export default CheckCollection;
