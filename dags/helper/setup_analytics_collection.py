@@ -14,15 +14,14 @@ from include.functions.utils import read_files_from_path
 
 t_log = logging.getLogger("airflow.task")
 
-# TODO: clean up env vars
 _WEAVIATE_CONN_ID = os.getenv("WEAVIATE_CONN_ID")
-_WEAVIATE_COLLECTION_NAME = "Products"
+_WEAVIATE_COLLECTION_NAME = "Analytics"
 _CREATE_COLLECTION_TASK_ID = "create_collection"
 _COLLECTION_ALREADY_EXISTS_TASK_ID = "collection_already_exists"
 _AWS_CONN_ID = os.getenv("AWS_CONN_ID")
 _S3_BUCKET = os.getenv("S3_BUCKET")
-_STAGE_FOLDER_NAME = os.getenv("STAGE_FOLDER_NAME")
-_PRODUCT_INFO_FOLDER_NAME = "product_info"
+_STAGE_FOLDER_NAME = "mock_search_history"
+_PRODUCT_INFO_FOLDER_NAME = "search_history"
 
 OBJECT_STORAGE_SRC = "s3"
 CONN_ID_SRC = _AWS_CONN_ID
@@ -51,13 +50,13 @@ BASE_SRC_SNEAKERS = ObjectStoragePath(
 
 
 @dag(
-    dag_display_name="📝 Text Transform and Load to Weaviate",
+    dag_display_name="Set up Analytics collection",
     start_date=datetime(2024, 7, 1),
-    schedule=(Dataset(BASE_SRC_SNEAKERS.as_uri()) | Dataset(BASE_SRC.as_uri())),
+    schedule=[Dataset("s3://astronomer-weaviate-demo-bucket-1234/mock_search_history/search_history")],
     catchup=False,
-    tags=["transform", "load", "use-case", "demo"],
+    tags=["helper"],
 )
-def transform_load_product_info():
+def setup_analytics_collection():
 
     # --------------- #
     # Set up Weaviate #
@@ -117,21 +116,20 @@ def transform_load_product_info():
         hook = WeaviateHook(conn_id)
 
         hook.create_collection(
-            name="Products",
+            name=_WEAVIATE_COLLECTION_NAME,
             vectorizer_config=wvcc.Configure.Vectorizer.text2vec_openai(model="ada"),
             generative_config=wvcc.Configure.Generative.openai(
                 model="gpt-4-1106-preview"
             ),
             properties=[
-                Property(name="title", data_type=DataType.TEXT),
-                Property(name="description", data_type=DataType.TEXT),
+                Property(name="searchterm", data_type=DataType.TEXT),
+                Property(name="timestamp", data_type=DataType.TEXT),
                 Property(
-                    name="file_path", data_type=DataType.TEXT, skip_vectorization=True
+                    name="purchase", data_type=DataType.BOOL, skip_vectorization=True
                 ),
                 Property(
-                    name="price", data_type=DataType.NUMBER, skip_vectorization=True
+                    name="amt", data_type=DataType.NUMBER, skip_vectorization=True
                 ),
-                Property(name="category", data_type=DataType.TEXT),
                 Property(name="uuid", data_type=DataType.UUID, skip_vectorization=True),
             ],
         )
@@ -158,12 +156,12 @@ def transform_load_product_info():
     # ------------------ #
 
     @task
-    def list_folders(path: ObjectStoragePath) -> list[ObjectStoragePath]:
+    def list_files(path: ObjectStoragePath) -> list[ObjectStoragePath]:
         """List files in local object storage."""
-        folders = [f for f in path.iterdir() if f.is_dir()]
+        folders = [f for f in path.iterdir() if f.is_file()]
         return folders
 
-    list_folders_obj = list_folders(path=BASE_SRC)
+    list_files_obj = list_files(path=BASE_SRC)
 
     @task(map_index_template="{{ my_custom_map_index }}")
     def extract_document_text(path: ObjectStoragePath) -> pd.DataFrame:
@@ -188,16 +186,15 @@ def transform_load_product_info():
 
         return df
 
-    extract_document_text_obj = extract_document_text.expand(path=list_folders_obj)
+    extract_document_text_obj = extract_document_text.expand(path=list_files_obj)
 
     ingest_data = WeaviateIngestOperator.partial(
         task_id="ingest_data",
         conn_id=_WEAVIATE_CONN_ID,
-        collection_name="Products",
-        map_index_template="Ingested files from: {{ task.input_data.to_dict()['category'][0] }}.",
+        collection_name=_WEAVIATE_COLLECTION_NAME,
     ).expand(input_data=extract_document_text_obj)
 
-    @task(outlets=[Dataset(f"weaviate://{_WEAVIATE_CONN_ID}@Products/")])
+    @task(outlets=[Dataset(f"weaviate://{_WEAVIATE_CONN_ID}@Analytics/")])
     def ingest_done():
         t_log.info(f"Ingestion done!")
 
@@ -208,4 +205,4 @@ def transform_load_product_info():
     )
 
 
-transform_load_product_info()
+setup_analytics_collection()

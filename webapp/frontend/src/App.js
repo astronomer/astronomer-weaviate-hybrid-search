@@ -3,8 +3,7 @@ import { BrowserRouter as Router, Route, Routes, useNavigate, Link } from 'react
 import './App.css';
 import HomePage from './components/HomePage';
 import SearchResults from './components/SearchResults';
-import CheckCollection from './components/CheckCollection';
-import logo from './logo.png'; // Add your logo image to the src folder
+import logo from './logo.png';
 
 function App() {
   return (
@@ -20,9 +19,11 @@ function App() {
           <aside className="sidebar">
             <ul>
               <li><Link to="/">Home</Link></li>
-              <li><Link to="#">Men</Link></li>
-              <li><Link to="#">Women</Link></li>
-              <li><Link to="#">Accessories</Link></li>
+              <li><Link to="#">Outdoor Furniture</Link></li>
+              <li><Link to="#">Outdoor Power Equipment</Link></li>
+              <li><Link to="#">Tools</Link></li>
+              <li><Link to="#">Sneakers</Link></li>
+              <li><Link to="#">New</Link></li>
               <li><Link to="#">Sale</Link></li>
             </ul>
           </aside>
@@ -53,7 +54,7 @@ const Navbar = () => {
     <div className="navbar">
       <Link to="/" className="logo-container">
         <img src={logo} alt="Logo" className="logo-image" />
-        <div className="logo-text">Weavstro Gear</div>
+        <div className="logo-text">Astriate Gear</div>
       </Link>
       <div className="search-bar">
         <input

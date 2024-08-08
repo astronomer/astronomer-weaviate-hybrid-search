@@ -45,7 +45,7 @@ BASE_DST = ObjectStoragePath(f"{OBJECT_STORAGE_DST}://{KEY_DST}", conn_id=CONN_I
         ],
     ),
     catchup=False,
-    tags=["ingest"],
+    tags=["ingest", "use-case"],
 )
 def in_product_info_snowflake():
 

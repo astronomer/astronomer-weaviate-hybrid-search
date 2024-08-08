@@ -3,6 +3,7 @@ from flask_cors import CORS
 import weaviate
 from weaviate.classes.init import Auth
 from weaviate.classes.query import Filter
+from weaviate.classes.query import HybridFusion
 import os
 import boto3
 
@@ -15,8 +16,8 @@ _STAGE_FOLDER_NAME = os.getenv("STAGE_FOLDER_NAME")
 
 def instantiate_weaviate_client():
 
-    OPENAI_KEY = os.getenv("OPENAI_KEY")
-    headers = {"X-OpenAI-Api-Key": OPENAI_KEY}
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    headers = {"X-OpenAI-Api-Key": OPENAI_API_KEY}
 
     client = weaviate.connect_to_weaviate_cloud(
         cluster_url=os.getenv("WEAVIATE_URL"),
@@ -61,16 +62,45 @@ def search():
     client = instantiate_weaviate_client()
     query = request.args.get("query")
 
-    generative = request.args.get('generative', 'false').lower() == 'true'
+    generative = request.args.get("generative", "false").lower() == "true"
     num_results = int(request.args.get("numResults", 9))
     category = request.args.get("category", None)
     alpha = float(request.args.get("alpha", 0.5))
 
+
+    if alpha < 0.25:
+        auto_limit = 1
+    elif alpha < 0.75:
+        auto_limit = 2
+    else:
+        auto_limit = 10
+
     products = client.collections.get("Products")
 
     # TODO: make this work?
+    # if generative:
+    #     prompt = "Given this: {description}, how would you sell it to people?"
+    #     response = products.generate.hybrid(
+    #         query=query, alpha=alpha, limit=1, single_prompt=prompt
+    #     )
+
+    # if category != "All":
+    #     response = products.query.near_text(
+    #         query=query,
+    #         return_properties=["title", "description", "file_path", "price"],
+    #         filters=Filter.by_property("category").equal(category),
+    #         limit=num_results,
+    #     )
+    # else:
+
     if generative:
-        prompt = "Given this: {description}, how would you sell it to people?"
+
+        prompt = """
+        You are an AI assistant providing personalized conversational product recommendations:
+
+        Given the user has recently bought a grill and outdoor plants as well as a children's swing and is now searching for: {description}, 
+        how would you recommend it to them?"""
+
         response = products.generate.hybrid(
             query=query,
             alpha=alpha,
@@ -79,38 +109,54 @@ def search():
         )
 
     elif category:
-        response = products.query.near_text(
-            query=query,
-            return_properties=["title", "description", "file_path", "price"],
-            filters=Filter.by_property("category").equal(category),
-            limit=num_results,
-        )
-    else:
+
         response = products.query.hybrid(
             query=query,
             alpha=alpha,
-            return_properties=["title", "description", "file_path", "price"],
+            return_properties=["uuid", "title", "description", "file_path", "price"],
+            filters=Filter.by_property("category").equal(category),
             limit=num_results,
+            fusion_type=HybridFusion.RELATIVE_SCORE,
+            auto_limit=auto_limit,
+        )
+
+    else:
+
+        response = products.query.hybrid(
+            query=query,
+            alpha=alpha,
+            return_properties=["uuid", "title", "description", "file_path", "price"],
+            limit=num_results,
+            fusion_type=HybridFusion.RELATIVE_SCORE,
+            auto_limit=auto_limit,
         )
 
     results = []
+    seen_uuids = set()
+
     for item in response.objects:
-        print(item.properties["file_path"])
-        presigned_url = generate_presigned_url(
-            _S3_BUCKET, _STAGE_FOLDER_NAME + "/" + item.properties["file_path"]
-        )
-        print(presigned_url)
-        result = {
-            "title": item.properties["title"],
-            "description": item.properties["description"],
-            "file_path": presigned_url,
-            "price": item.properties["price"],
-        }
+        uuid = item.properties["uuid"]
 
-        if generative:
-            results["generated"] = item.generated
+        if uuid not in seen_uuids:
+            seen_uuids.add(uuid)
 
-        results.append(result)
+            print(item.properties["file_path"])
+            presigned_url = generate_presigned_url(
+                _S3_BUCKET, _STAGE_FOLDER_NAME + "/" + item.properties["file_path"]
+            )
+            print(presigned_url)
+
+            result = {
+                "title": item.properties["title"],
+                "description": item.properties["description"],
+                "file_path": presigned_url,
+                "price": item.properties["price"],
+            }
+
+            if generative:
+                result["generated"] = item.generated
+
+            results.append(result)
 
     client.close()
 

@@ -57,6 +57,10 @@ const SearchResults = () => {
     searchProducts(searchQuery);
   };
 
+  const handleToggleChange = () => {
+    setGenerative(prevState => !prevState);
+  };
+
   return (
     <div>
       <div className="search-results-header">
@@ -81,7 +85,7 @@ const SearchResults = () => {
         </div>
         <div className="advanced-search-options">
           <label>
-            Number of Results:
+            Max Number of Results:
             <input
               type="number"
               value={numResults}
@@ -100,18 +104,24 @@ const SearchResults = () => {
               <option value="tools">Tools</option>
             </select>
           </label>
+          
           <label>
-            Alpha:
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={alpha}
-              onChange={(e) => setAlpha(e.target.value)}
-            />
-            {alpha}
+            <div className="slider-container">
+              <span className="slider-label-text">I know what I want</span>
+              <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={alpha}
+                  onChange={(e) => setAlpha(e.target.value)}
+                  className="slider"
+              />
+              <span className="slider-label-text">Looking for ideas</span>
+            </div>
           </label>
+
+
         </div>
       </div>
       {results.length > 0 ? (

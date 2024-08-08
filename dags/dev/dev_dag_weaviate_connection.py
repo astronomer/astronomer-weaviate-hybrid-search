@@ -39,4 +39,7 @@ def dev_dag_weaviate_connection():
     )
 
 
+    # TODO: add test Snowflake conn
+
+
 dev_dag_weaviate_connection()

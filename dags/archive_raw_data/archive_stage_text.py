@@ -42,7 +42,7 @@ BASE_DST = ObjectStoragePath(f"{OBJECT_STORAGE_DST}://{KEY_DST}", conn_id=CONN_I
         )
     ],
     catchup=False,
-    tags=["archive"],
+    tags=["archive", "use-case"],
 )
 def archive_stage_text():
 

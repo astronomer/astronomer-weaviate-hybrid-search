@@ -40,18 +40,22 @@ BASE_DST = ObjectStoragePath(f"{OBJECT_STORAGE_DST}://{KEY_DST}", conn_id=CONN_I
         datasets=[Dataset(BASE_SRC.as_uri() + "/" + _IMAGE_FOLDER_NAME)],
     ),
     catchup=False,
-    tags=["ingest"],
+    tags=["ingest", "use-case"],
 )
 def in_images():
 
     @task
     def list_ingest_files(
         base_path: ObjectStoragePath, image_folder: str
-    ) -> list[ObjectStoragePath]:
+    ) -> list[ObjectStoragePath] | list:
         """List files in remote object storage."""
         path = base_path / image_folder
-        files = [f for f in path.iterdir() if f.is_file()]
-        return files
+
+        if path.exists():
+            files = [f for f in path.iterdir() if f.is_file()]
+            return files
+        else:
+            return []
 
     @task(map_index_template="{{ my_custom_map_index }}")
     def copy_ingest_to_stage(

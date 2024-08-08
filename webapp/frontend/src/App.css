@@ -8,6 +8,8 @@ html, body, #root, .App {
   flex-direction: column;
 }
 
+
+
 .App {
   text-align: center;
   font-family: "Cormorant Garamond", serif;
@@ -494,3 +496,103 @@ main {
   font-size: 16px;
   color: #333;
 }
+
+/* Slider Styles */
+.slider-label {
+  font-family: Arial, sans-serif;
+  color: #333;
+  font-size: 16px;
+  display: block;
+  margin: 20px 0;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.slider-label-text {
+  margin: 0 10px;
+  font-size: 14px;
+}
+
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 50%; /* Half the original width */
+  height: 10px;
+  background: #ddd;
+  outline: none;
+  opacity: 0.7;
+  transition: opacity .15s ease-in-out;
+  margin: 0 10px;
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #4CAF50; /* Green thumb for a slick look */
+  cursor: pointer;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  transition: background .15s ease-in-out;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: #45a049; /* Darker green when hovered */
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #4CAF50;
+  cursor: pointer;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  transition: background .15s ease-in-out;
+}
+
+.slider::-moz-range-thumb:hover {
+  background: #45a049;
+}
+
+.slider-container .slider::-webkit-slider-thumb:before,
+.slider-container .slider::-moz-range-thumb:before {
+    content: "";
+    position: absolute;
+    bottom: -20px; /* Adjust as needed to move the labels out of view */
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: transparent; /* Make the text transparent */
+    font-size: 12px;
+    line-height: 1;
+}
+
+/* Checkbox Styles */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-label {
+  margin-left: 10px;
+  font-size: 14px;
+  color: #333;
+}
+
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+
