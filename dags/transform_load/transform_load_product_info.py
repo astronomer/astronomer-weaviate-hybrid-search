@@ -1,3 +1,14 @@
+"""
+### ETL: Ingest product information from S3 into Weaviate
+
+This DAG:
+- Checks if a collection exists in Weaviate
+- If not it creates that collection
+- Retrieves product information from S3
+- Transforms the product information
+- Loads the product information to Weaviate
+"""
+
 from airflow.decorators import dag, task
 from airflow.datasets import Dataset
 from airflow.io.path import ObjectStoragePath
@@ -5,33 +16,40 @@ from airflow.models.baseoperator import chain
 from airflow.operators.empty import EmptyOperator
 from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
 from airflow.providers.weaviate.operators.weaviate import WeaviateIngestOperator
-from pendulum import datetime
+from pendulum import datetime, duration
 import pandas as pd
 import logging
 import os
 
+# import modularized functions from the include folder
 from include.functions.utils import read_files_from_path
 
+# Get the Airflow task logger
 t_log = logging.getLogger("airflow.task")
 
-# TODO: clean up env vars
+# Weaviate variables
 _WEAVIATE_CONN_ID = os.getenv("WEAVIATE_CONN_ID")
-_WEAVIATE_COLLECTION_NAME = "Products"
-_CREATE_COLLECTION_TASK_ID = "create_collection"
-_COLLECTION_ALREADY_EXISTS_TASK_ID = "collection_already_exists"
+_WEAVIATE_COLLECTION_NAME_PRODUCT_INFO = os.getenv(
+    "WEAVIATE_COLLECTION_NAME_PRODUCT_INFO"
+)
+
+# S3 variables
 _AWS_CONN_ID = os.getenv("AWS_CONN_ID")
 _S3_BUCKET = os.getenv("S3_BUCKET")
 _STAGE_FOLDER_NAME = os.getenv("STAGE_FOLDER_NAME")
-_PRODUCT_INFO_FOLDER_NAME = "product_info"
+_PRODUCT_INFO_FOLDER_NAME = os.getenv("PRODUCT_INFO_FOLDER_NAME")
 
+# Snowflake variables
+_SNOWFLAKE_TABLE_NAME = os.getenv("SNOWFLAKE_TABLE_NAME_SNEAKERS_DATA")
+
+# Creating ObjectStoragePath objects
+# See https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/objectstorage.html
+# for more information on the Airflow Object Storage feature
 OBJECT_STORAGE_SRC = "s3"
 CONN_ID_SRC = _AWS_CONN_ID
 KEY_SRC = _S3_BUCKET + "/" + _STAGE_FOLDER_NAME + "/" + _PRODUCT_INFO_FOLDER_NAME
 
 BASE_SRC = ObjectStoragePath(f"{OBJECT_STORAGE_SRC}://{KEY_SRC}/", conn_id=CONN_ID_SRC)
-
-_SNOWFLAKE_TABLE_NAME = "sneakers_data"
-
 
 OBJECT_STORAGE_DST = "s3"
 CONN_ID_DST = _AWS_CONN_ID
@@ -50,11 +68,27 @@ BASE_SRC_SNEAKERS = ObjectStoragePath(
 )
 
 
+# branching task IDs
+_CREATE_COLLECTION_TASK_ID = "create_collection"
+_COLLECTION_ALREADY_EXISTS_TASK_ID = "collection_already_exists"
+
+# -------------- #
+# DAG definition #
+# -------------- #
+
+
 @dag(
-    dag_display_name="📝 Text Transform and Load to Weaviate",
-    start_date=datetime(2024, 7, 1),
+    dag_display_name="💚 Load product information: S3 -> Weaviate",
+    start_date=datetime(2024, 8, 1),
     schedule=(Dataset(BASE_SRC_SNEAKERS.as_uri()) | Dataset(BASE_SRC.as_uri())),
     catchup=False,
+    default_args={
+        "owner": "DE team",
+        "retries": 3,
+        "retry_delay": duration(minutes=1),
+    },
+    doc_md=__doc__,
+    description="ETL",
     tags=["transform", "load", "use-case", "demo"],
 )
 def transform_load_product_info():
@@ -96,7 +130,7 @@ def transform_load_product_info():
 
     check_collection_obj = check_collection(
         conn_id=_WEAVIATE_CONN_ID,
-        collection_name=_WEAVIATE_COLLECTION_NAME,
+        collection_name=_WEAVIATE_COLLECTION_NAME_PRODUCT_INFO,
         create_collection_task_id=_CREATE_COLLECTION_TASK_ID,
         collection_already_exists_task_id=_COLLECTION_ALREADY_EXISTS_TASK_ID,
     )
@@ -117,7 +151,7 @@ def transform_load_product_info():
         hook = WeaviateHook(conn_id)
 
         hook.create_collection(
-            name="Products",
+            name=collection_name,
             vectorizer_config=wvcc.Configure.Vectorizer.text2vec_openai(model="ada"),
             generative_config=wvcc.Configure.Generative.openai(
                 model="gpt-4-1106-preview"
@@ -138,7 +172,7 @@ def transform_load_product_info():
 
     create_collection_obj = create_collection(
         conn_id=_WEAVIATE_CONN_ID,
-        collection_name=_WEAVIATE_COLLECTION_NAME,
+        collection_name=_WEAVIATE_COLLECTION_NAME_PRODUCT_INFO,
     )
 
     collection_already_exists = EmptyOperator(
@@ -200,6 +234,10 @@ def transform_load_product_info():
     @task(outlets=[Dataset(f"weaviate://{_WEAVIATE_CONN_ID}@Products/")])
     def ingest_done():
         t_log.info(f"Ingestion done!")
+
+    # ------------------------------ #
+    # Define additional dependencies #
+    # ------------------------------ #
 
     chain(
         weaviate_ready,

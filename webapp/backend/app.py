@@ -4,6 +4,7 @@ import weaviate
 from weaviate.classes.init import Auth
 from weaviate.classes.query import Filter
 from weaviate.classes.query import HybridFusion
+from weaviate.config import AdditionalConfig
 import os
 import boto3
 
@@ -23,6 +24,8 @@ def instantiate_weaviate_client():
         cluster_url=os.getenv("WEAVIATE_URL"),
         auth_credentials=Auth.api_key(os.getenv("WEAVIATE_AUTH")),
         headers=headers,
+        skip_init_checks=True,
+        additional_config=AdditionalConfig(timeout=(10000, 10000))
     )
 
     return client
@@ -76,22 +79,6 @@ def search():
         auto_limit = 10
 
     products = client.collections.get("Products")
-
-    # TODO: make this work?
-    # if generative:
-    #     prompt = "Given this: {description}, how would you sell it to people?"
-    #     response = products.generate.hybrid(
-    #         query=query, alpha=alpha, limit=1, single_prompt=prompt
-    #     )
-
-    # if category != "All":
-    #     response = products.query.near_text(
-    #         query=query,
-    #         return_properties=["title", "description", "file_path", "price"],
-    #         filters=Filter.by_property("category").equal(category),
-    #         limit=num_results,
-    #     )
-    # else:
 
     if generative:
 
@@ -157,6 +144,13 @@ def search():
                 result["generated"] = item.generated
 
             results.append(result)
+
+    analytics = client.collections.get("Analytics")
+
+    query = analytics.data.insert(
+        properties={
+            "searchterm": query
+        })
 
     client.close()
 

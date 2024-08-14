@@ -1,3 +1,9 @@
+"""
+### Demo Setup DAG: Upload search history
+
+This DAG loads a demo search history into a Weaviate collection.
+"""
+
 from airflow.decorators import dag, task
 from airflow.datasets import Dataset
 from airflow.io.path import ObjectStoragePath
@@ -5,55 +11,61 @@ from airflow.models.baseoperator import chain
 from airflow.operators.empty import EmptyOperator
 from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
 from airflow.providers.weaviate.operators.weaviate import WeaviateIngestOperator
-from pendulum import datetime
+from pendulum import datetime, duration
 import pandas as pd
 import logging
 import os
 
+# import modularized functions from the include folder
 from include.functions.utils import read_files_from_path
 
+# Get the Airflow task logger
 t_log = logging.getLogger("airflow.task")
 
+# Weaviate variables
 _WEAVIATE_CONN_ID = os.getenv("WEAVIATE_CONN_ID")
-_WEAVIATE_COLLECTION_NAME = "Analytics"
-_CREATE_COLLECTION_TASK_ID = "create_collection"
-_COLLECTION_ALREADY_EXISTS_TASK_ID = "collection_already_exists"
+_WEAVIATE_ANALYTICS_COLLECTION_NAME = os.getenv("WEAVIATE_ANALYTICS_COLLECTION_NAME")
+
+# S3 variables
 _AWS_CONN_ID = os.getenv("AWS_CONN_ID")
 _S3_BUCKET = os.getenv("S3_BUCKET")
-_STAGE_FOLDER_NAME = "mock_search_history"
-_PRODUCT_INFO_FOLDER_NAME = "search_history"
+_MOCK_SEARCH_HISTORY_FOLDER = os.getenv("MOCK_SEARCH_HISTORY_FOLDER")
+_SEARCH_HISTORY_FOLDER = os.getenv("SEARCH_HISTORY_FOLDER")
 
+# Creating ObjectStoragePath objects
+# See https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/objectstorage.html
+# for more information on the Airflow Object Storage feature
 OBJECT_STORAGE_SRC = "s3"
 CONN_ID_SRC = _AWS_CONN_ID
-KEY_SRC = _S3_BUCKET + "/" + _STAGE_FOLDER_NAME + "/" + _PRODUCT_INFO_FOLDER_NAME
+KEY_SRC = _S3_BUCKET + "/" + _MOCK_SEARCH_HISTORY_FOLDER + "/" + _SEARCH_HISTORY_FOLDER
 
 BASE_SRC = ObjectStoragePath(f"{OBJECT_STORAGE_SRC}://{KEY_SRC}/", conn_id=CONN_ID_SRC)
 
-_SNOWFLAKE_TABLE_NAME = "sneakers_data"
+# branching task IDs
+_CREATE_COLLECTION_TASK_ID = "create_collection"
+_COLLECTION_ALREADY_EXISTS_TASK_ID = "collection_already_exists"
 
-
-OBJECT_STORAGE_DST = "s3"
-CONN_ID_DST = _AWS_CONN_ID
-KEY_SRC = (
-    _S3_BUCKET
-    + "/"
-    + _STAGE_FOLDER_NAME
-    + "/"
-    + _PRODUCT_INFO_FOLDER_NAME
-    + "/"
-    + _SNOWFLAKE_TABLE_NAME
-)
-
-BASE_SRC_SNEAKERS = ObjectStoragePath(
-    f"{OBJECT_STORAGE_DST}://{KEY_SRC}", conn_id=CONN_ID_DST
-)
+# -------------- #
+# DAG definition #
+# -------------- #
 
 
 @dag(
-    dag_display_name="Set up Analytics collection",
-    start_date=datetime(2024, 7, 1),
-    schedule=[Dataset("s3://astronomer-weaviate-demo-bucket-1234/mock_search_history/search_history")],
+    dag_display_name="🛠️ Set up Analytics collection",
+    start_date=datetime(2024, 8, 1),
+    schedule=[
+        Dataset(
+            f"s3://{_S3_BUCKET}/{_MOCK_SEARCH_HISTORY_FOLDER}/{_SEARCH_HISTORY_FOLDER}"
+        )
+    ],
     catchup=False,
+    default_args={
+        "owner": "Demo team",
+        "retries": 3,
+        "retry_delay": duration(minutes=1),
+    },
+    doc_md=__doc__,
+    description="Helper",
     tags=["helper"],
 )
 def setup_analytics_collection():
@@ -95,7 +107,7 @@ def setup_analytics_collection():
 
     check_collection_obj = check_collection(
         conn_id=_WEAVIATE_CONN_ID,
-        collection_name=_WEAVIATE_COLLECTION_NAME,
+        collection_name=_WEAVIATE_ANALYTICS_COLLECTION_NAME,
         create_collection_task_id=_CREATE_COLLECTION_TASK_ID,
         collection_already_exists_task_id=_COLLECTION_ALREADY_EXISTS_TASK_ID,
     )
@@ -116,7 +128,7 @@ def setup_analytics_collection():
         hook = WeaviateHook(conn_id)
 
         hook.create_collection(
-            name=_WEAVIATE_COLLECTION_NAME,
+            name=_WEAVIATE_ANALYTICS_COLLECTION_NAME,
             vectorizer_config=wvcc.Configure.Vectorizer.text2vec_openai(model="ada"),
             generative_config=wvcc.Configure.Generative.openai(
                 model="gpt-4-1106-preview"
@@ -136,7 +148,7 @@ def setup_analytics_collection():
 
     create_collection_obj = create_collection(
         conn_id=_WEAVIATE_CONN_ID,
-        collection_name=_WEAVIATE_COLLECTION_NAME,
+        collection_name=_WEAVIATE_ANALYTICS_COLLECTION_NAME,
     )
 
     collection_already_exists = EmptyOperator(
@@ -191,12 +203,23 @@ def setup_analytics_collection():
     ingest_data = WeaviateIngestOperator.partial(
         task_id="ingest_data",
         conn_id=_WEAVIATE_CONN_ID,
-        collection_name=_WEAVIATE_COLLECTION_NAME,
+        collection_name=_WEAVIATE_ANALYTICS_COLLECTION_NAME,
     ).expand(input_data=extract_document_text_obj)
 
-    @task(outlets=[Dataset(f"weaviate://{_WEAVIATE_CONN_ID}@Analytics/")])
+    @task(
+        outlets=[
+            Dataset(
+                f"weaviate://{_WEAVIATE_CONN_ID}@{_WEAVIATE_ANALYTICS_COLLECTION_NAME}/"
+            )
+        ]
+    )
     def ingest_done():
         t_log.info(f"Ingestion done!")
+
+
+    # ------------------------------ #
+    # Define additional dependencies #
+    # ------------------------------ #
 
     chain(
         weaviate_ready,
