@@ -82,11 +82,7 @@ def search():
 
     if generative:
 
-        prompt = """
-        You are an AI assistant providing personalized conversational product recommendations:
-
-        Given the user has recently bought a grill and outdoor plants as well as a children's swing and is now searching for: {description}, 
-        how would you recommend it to them?"""
+        prompt = "Give product recommendations, the user has recently bought a grill and is now searching for: {description}, how would you recommend it to them?"
 
         response = products.generate.hybrid(
             query=query,
