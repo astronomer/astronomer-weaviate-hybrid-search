@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 const SearchResults = () => {
   const [results, setResults] = useState([]);
+  const [generatedText, setGeneratedText] = useState('');
   const [advancedSearch, setAdvancedSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [numResults, setNumResults] = useState(10);
@@ -47,14 +48,27 @@ const SearchResults = () => {
       });
       const response = await fetch(`http://localhost:5000/search?${params.toString()}`);
       const data = await response.json();
-      setResults(data);
+
+      if (generative && data.length > 0) {
+        setResults([data[0]]); // Only display the first result
+        setGeneratedText(data[0].generated || ''); // Set the generated text
+      } else {
+        setResults(data);
+        setGeneratedText(''); // Clear the generated text
+      }
     } catch (error) {
       console.error('Error fetching search results:', error);
+      setResults([]);
+      setGeneratedText(''); // Clear the generated text
     }
   };
 
   const handleAdvancedSearch = () => {
     searchProducts(searchQuery);
+  };
+
+  const handleToggleChange = () => {
+    setGenerative(prevState => !prevState);
   };
 
   return (
@@ -81,7 +95,7 @@ const SearchResults = () => {
         </div>
         <div className="advanced-search-options">
           <label>
-            Number of Results:
+            Max Number of Results:
             <input
               type="number"
               value={numResults}
@@ -100,20 +114,32 @@ const SearchResults = () => {
               <option value="tools">Tools</option>
             </select>
           </label>
+          
           <label>
-            Alpha:
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={alpha}
-              onChange={(e) => setAlpha(e.target.value)}
-            />
-            {alpha}
+            <div className="slider-container">
+              <span className="slider-label-text">I know what I want</span>
+              <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={alpha}
+                  onChange={(e) => setAlpha(e.target.value)}
+                  className="slider"
+              />
+              <span className="slider-label-text">Looking for ideas</span>
+            </div>
           </label>
+
+
+
         </div>
       </div>
+      {generative && generatedText && (
+        <div className="generative-text">
+          <h3>{generatedText}</h3>
+        </div>
+      )}
       {results.length > 0 ? (
         <div className="product-grid">
           {results.map((product, index) => (

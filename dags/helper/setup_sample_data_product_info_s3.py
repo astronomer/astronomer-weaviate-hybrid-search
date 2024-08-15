@@ -1,5 +1,5 @@
 """
-## Demo DAG to load sample images to S3 from local storage
+## Demo DAG: to load sample product info to S3 from local storage
 
 To use a different remote storage option replace the S3CreateBucketOperator,
 as well as change the OBJECT_STORAGE_DST, CONN_ID_DST and KEY_DST
@@ -8,19 +8,25 @@ parameters.
 
 from airflow.decorators import dag, task
 from airflow.datasets import Dataset
-from airflow.providers.amazon.aws.operators.s3 import S3CreateBucketOperator
-from airflow.io.path import ObjectStoragePath
-from pendulum import datetime
 from airflow.models.baseoperator import chain
-import os
+from airflow.io.path import ObjectStoragePath
+from airflow.providers.amazon.aws.operators.s3 import S3CreateBucketOperator
+from pendulum import datetime, duration
 import logging
+import os
 
+# Get the Airflow task logger
 t_log = logging.getLogger("airflow.task")
 
+# S3 variables
 _AWS_CONN_ID = os.getenv("AWS_CONN_ID")
 _S3_BUCKET = os.getenv("S3_BUCKET")
 _INGEST_FOLDER_NAME = os.getenv("INGEST_FOLDER_NAME")
+_PRODUCT_INFO_FOLDER_NAME = os.getenv("PRODUCT_INFO_FOLDER_NAME")
 
+# Creating ObjectStoragePath objects
+# See https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/objectstorage.html
+# for more information on the Airflow Object Storage feature
 OBJECT_STORAGE_SRC = "file"
 CONN_ID_SRC = None
 KEY_SRC = "include/demo_data/product_info/"
@@ -32,12 +38,23 @@ KEY_DST = _S3_BUCKET + "/" + _INGEST_FOLDER_NAME
 base_src = ObjectStoragePath(f"{OBJECT_STORAGE_SRC}://{KEY_SRC}", conn_id=CONN_ID_SRC)
 base_dst = ObjectStoragePath(f"{OBJECT_STORAGE_DST}://{KEY_DST}", conn_id=CONN_ID_DST)
 
+# -------------- #
+# DAG definition #
+# -------------- #
+
 
 @dag(
-    dag_display_name="Load sample product info to S3",
-    start_date=datetime(2024, 7, 1),
+    dag_display_name="🛠️ Load sample product info to S3",
+    start_date=datetime(2024, 8, 1),
     schedule=[Dataset("setup")],
     catchup=False,
+    default_args={
+        "owner": "Demo team",
+        "retries": 3,
+        "retry_delay": duration(minutes=1),
+    },
+    doc_md=__doc__,
+    description="Helper",
     tags=["helper"],
 )
 def setup_sample_data_product_info_s3():
@@ -74,11 +91,15 @@ def setup_sample_data_product_info_s3():
 
     @task(
         outlets=[
-            Dataset(base_dst.as_uri() + "/product_info"),
+            Dataset(base_dst.as_uri() + f"/{_PRODUCT_INFO_FOLDER_NAME}"),
         ]
     )
     def sample_img_in():
         t_log.info("Sample images loaded to remote storage!")
+
+    # ------------------------------ #
+    # Define additional dependencies #
+    # ------------------------------ #
 
     chain(
         [create_bucket, list_files_sample_img_obj],

@@ -1,23 +1,36 @@
+"""
+### ETL: Ingest product information from the ingestion S3 location to the stage S3 location
+
+This DAG moves images from an ingestion location in S3 to
+a staging location for the next DAG to access and ingest into Weaviate.
+"""
+
 from airflow.decorators import dag, task
 from airflow.datasets import Dataset
 from airflow.timetables.datasets import DatasetOrTimeSchedule
 from airflow.timetables.trigger import CronTriggerTimetable
 from airflow.io.path import ObjectStoragePath
 from airflow.models.baseoperator import chain
-from pendulum import datetime
-import os
+from pendulum import datetime, duration
 import logging
+import os
 
+# import modularized functions from the include folder
 from include.functions.utils import get_all_files, get_all_checksums, compare_checksums
 
+# Get the Airflow task logger
 t_log = logging.getLogger("airflow.task")
 
+# S3 variables
 _AWS_CONN_ID = os.getenv("AWS_CONN_ID")
 _S3_BUCKET = os.getenv("S3_BUCKET")
 _INGEST_FOLDER_NAME = os.getenv("INGEST_FOLDER_NAME")
 _STAGE_FOLDER_NAME = os.getenv("STAGE_FOLDER_NAME")
-_PRODUCT_INFO_FOLDER_NAME = "product_info"
+_PRODUCT_INFO_FOLDER_NAME = os.getenv("PRODUCT_INFO_FOLDER_NAME")
 
+# Creating ObjectStoragePath objects
+# See https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/objectstorage.html
+# for more information on the Airflow Object Storage feature
 OBJECT_STORAGE_SRC = "s3"
 CONN_ID_SRC = _AWS_CONN_ID
 KEY_SRC = _S3_BUCKET + "/" + _INGEST_FOLDER_NAME
@@ -30,27 +43,41 @@ KEY_DST = _S3_BUCKET + "/" + _STAGE_FOLDER_NAME
 BASE_SRC = ObjectStoragePath(f"{OBJECT_STORAGE_SRC}://{KEY_SRC}", conn_id=CONN_ID_SRC)
 BASE_DST = ObjectStoragePath(f"{OBJECT_STORAGE_DST}://{KEY_DST}", conn_id=CONN_ID_DST)
 
+# -------------- #
+# DAG definition #
+# -------------- #
+
 
 @dag(
-    dag_display_name="📝 Product Info Ingestion from S3",
-    start_date=datetime(2024, 7, 1),
-    schedule=DatasetOrTimeSchedule(
+    dag_display_name="📝 Ingest product information: S3 -> S3",
+    start_date=datetime(2024, 8, 1),
+    schedule=DatasetOrTimeSchedule(  # This DAG runs once at midnight, plus whenever a dataset is updated
         timetable=CronTriggerTimetable("0 0 * * *", timezone="UTC"),
         datasets=[Dataset(BASE_SRC.as_uri() + "/" + _PRODUCT_INFO_FOLDER_NAME)],
     ),
     catchup=False,
-    tags=["ingest"],
+    default_args={
+        "owner": "DE team",
+        "retries": 3,
+        "retry_delay": duration(minutes=1),
+    },
+    doc_md=__doc__,
+    description="ETL",
+    tags=["ETL", "use-case"],
 )
 def in_product_info_s3():
 
     @task
     def list_ingest_folders(
         base_path: ObjectStoragePath, image_folder: str
-    ) -> list[ObjectStoragePath]:
+    ) -> list[ObjectStoragePath] | list:
         """List files in remote object storage."""
         path = base_path / image_folder
-        folders = [f for f in path.iterdir() if f.is_dir()]
-        return folders
+        if path.exists():
+            folders = [f for f in path.iterdir() if f.is_dir()]
+            return folders
+        else:
+            return []
 
     @task(map_index_template="{{ my_custom_map_index }}")
     def copy_ingest_to_stage(
@@ -98,6 +125,7 @@ def in_product_info_s3():
 
     @task
     def del_files_from_ingest(base_src: ObjectStoragePath, type_folder_name: str):
+        """Delete files from the ingestion location"""
         path = base_src / type_folder_name
         files = get_all_files(path)
         for f in files:
@@ -119,6 +147,10 @@ def in_product_info_s3():
     del_files_from_ingest_obj = del_files_from_ingest(
         base_src=BASE_SRC, type_folder_name=_PRODUCT_INFO_FOLDER_NAME
     )
+
+    # ------------------------------ #
+    # Define additional dependencies #
+    # ------------------------------ #
 
     chain(copy_ingest_to_stage_obj, verify_checksum_obj, del_files_from_ingest_obj)
 

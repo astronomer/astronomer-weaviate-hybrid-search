@@ -50,7 +50,10 @@ def read_files_from_path(
 ) -> pd.DataFrame:
     """Reads files from remote storage and returns as a dataframe."""
 
-    files = [f for f in path.rglob("*") if f.is_file()]
+    if path.is_dir():
+        files = [f for f in path.rglob("*") if f.is_file()]
+    else:
+        files = [path]
 
     list_of_df = []
 
@@ -63,4 +66,9 @@ def read_files_from_path(
 
         list_of_df.append(df)
 
-    return pd.concat(list_of_df, ignore_index=True)
+    if len(list_of_df) > 1:
+        return pd.concat(list_of_df, ignore_index=True)
+    elif len(list_of_df) == 1:
+        return list_of_df[0]
+    else:
+        return None

@@ -1,25 +1,42 @@
+"""
+### ETL: Archive raw product information
+
+This DAG
+- Verifies all product information files from the S3 ingest location have been
+correctly copied to the S3 stage location
+- Deletes files from the S3 ingest location
+"""
+
 from airflow.decorators import dag, task
 from airflow.datasets import Dataset
-from airflow.timetables.datasets import DatasetOrTimeSchedule
-from airflow.timetables.trigger import CronTriggerTimetable
 from airflow.io.path import ObjectStoragePath
 from airflow.models.baseoperator import chain
-from pendulum import datetime
-import os
+from pendulum import datetime, duration
 import logging
+import os
 
+# import modularized functions from the include folder
 from include.functions.utils import get_all_files, get_all_checksums, compare_checksums
 
+# Get the Airflow task logger
 t_log = logging.getLogger("airflow.task")
 
+# Weaviate variables
 _WEAVIATE_CONN_ID = os.getenv("WEAVIATE_CONN_ID")
-_WEAVIATE_COLLECTION_NAME = "Products"
+_WEAVIATE_COLLECTION_NAME_PRODUCT_INFO = os.getenv(
+    "WEAVIATE_COLLECTION_NAME_PRODUCT_INFO"
+)
+
+# S3 variables
 _AWS_CONN_ID = os.getenv("AWS_CONN_ID")
 _S3_BUCKET = os.getenv("S3_BUCKET")
 _STAGE_FOLDER_NAME = os.getenv("STAGE_FOLDER_NAME")
 _ARCHIVE_FOLDER_NAME = os.getenv("ARCHIVE_FOLDER_NAME")
-_PRODUCT_INFO_FOLDER_NAME = "product_info"
+_PRODUCT_INFO_FOLDER_NAME = os.getenv("PRODUCT_INFO_FOLDER_NAME")
 
+# Creating ObjectStoragePath objects
+# See https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/objectstorage.html
+# for more information on the Airflow Object Storage feature
 OBJECT_STORAGE_SRC = "s3"
 CONN_ID_SRC = _AWS_CONN_ID
 KEY_SRC = _S3_BUCKET + "/" + _STAGE_FOLDER_NAME
@@ -32,17 +49,24 @@ KEY_DST = _S3_BUCKET + "/" + _ARCHIVE_FOLDER_NAME
 BASE_SRC = ObjectStoragePath(f"{OBJECT_STORAGE_SRC}://{KEY_SRC}", conn_id=CONN_ID_SRC)
 BASE_DST = ObjectStoragePath(f"{OBJECT_STORAGE_DST}://{KEY_DST}", conn_id=CONN_ID_DST)
 
+# -------------- #
+# DAG definition #
+# -------------- #
+
 
 @dag(
-    dag_display_name="📝 Archive raw text",
-    start_date=datetime(2024, 7, 1),
+    dag_display_name="🗄️ Archive raw product information",
+    start_date=datetime(2024, 8, 1),
     schedule=[
         Dataset(
-            f"weaviate://{_WEAVIATE_CONN_ID}@{_WEAVIATE_COLLECTION_NAME}/"
+            f"weaviate://{_WEAVIATE_CONN_ID}@{_WEAVIATE_COLLECTION_NAME_PRODUCT_INFO}/"
         )
     ],
     catchup=False,
-    tags=["archive"],
+    default_args={"owner": "DE team", "retries": 3, "retry_delay": duration(minutes=1)},
+    doc_md=__doc__,
+    description="ETL",
+    tags=["etl", "use-case"],
 )
 def archive_stage_text():
 
@@ -100,7 +124,9 @@ def archive_stage_text():
         for f in files:
             f.unlink()
 
-    folders = list_ingest_folders(base_path=BASE_SRC, image_folder=_PRODUCT_INFO_FOLDER_NAME)
+    folders = list_ingest_folders(
+        base_path=BASE_SRC, image_folder=_PRODUCT_INFO_FOLDER_NAME
+    )
     copy_ingest_to_stage_obj = copy_ingest_to_stage.partial(base_dst=BASE_DST).expand(
         path_src=folders
     )
@@ -114,6 +140,10 @@ def archive_stage_text():
     del_files_from_ingest_obj = del_files_from_ingest(
         base_src=BASE_SRC, type_folder_name=_PRODUCT_INFO_FOLDER_NAME
     )
+
+    # ------------------------------ #
+    # Define additional dependencies #
+    # ------------------------------ #
 
     chain(copy_ingest_to_stage_obj, verify_checksum_obj, del_files_from_ingest_obj)
 

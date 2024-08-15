@@ -1,12 +1,7 @@
 """
-### ETL: Ingest product information from S3 into Weaviate
+### Demo Setup DAG: Upload search history
 
-This DAG:
-- Checks if a collection exists in Weaviate
-- If not it creates that collection
-- Retrieves product information from S3
-- Transforms the product information
-- Loads the product information to Weaviate
+This DAG loads a demo search history into a Weaviate collection.
 """
 
 from airflow.decorators import dag, task
@@ -29,44 +24,22 @@ t_log = logging.getLogger("airflow.task")
 
 # Weaviate variables
 _WEAVIATE_CONN_ID = os.getenv("WEAVIATE_CONN_ID")
-_WEAVIATE_COLLECTION_NAME_PRODUCT_INFO = os.getenv(
-    "WEAVIATE_COLLECTION_NAME_PRODUCT_INFO"
-)
+_WEAVIATE_ANALYTICS_COLLECTION_NAME = os.getenv("WEAVIATE_ANALYTICS_COLLECTION_NAME")
 
 # S3 variables
 _AWS_CONN_ID = os.getenv("AWS_CONN_ID")
 _S3_BUCKET = os.getenv("S3_BUCKET")
-_STAGE_FOLDER_NAME = os.getenv("STAGE_FOLDER_NAME")
-_PRODUCT_INFO_FOLDER_NAME = os.getenv("PRODUCT_INFO_FOLDER_NAME")
-
-# Snowflake variables
-_SNOWFLAKE_TABLE_NAME = os.getenv("SNOWFLAKE_TABLE_NAME_SNEAKERS_DATA")
+_MOCK_SEARCH_HISTORY_FOLDER = os.getenv("MOCK_SEARCH_HISTORY_FOLDER")
+_SEARCH_HISTORY_FOLDER = os.getenv("SEARCH_HISTORY_FOLDER")
 
 # Creating ObjectStoragePath objects
 # See https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/objectstorage.html
 # for more information on the Airflow Object Storage feature
 OBJECT_STORAGE_SRC = "s3"
 CONN_ID_SRC = _AWS_CONN_ID
-KEY_SRC = _S3_BUCKET + "/" + _STAGE_FOLDER_NAME + "/" + _PRODUCT_INFO_FOLDER_NAME
+KEY_SRC = _S3_BUCKET + "/" + _MOCK_SEARCH_HISTORY_FOLDER + "/" + _SEARCH_HISTORY_FOLDER
 
 BASE_SRC = ObjectStoragePath(f"{OBJECT_STORAGE_SRC}://{KEY_SRC}/", conn_id=CONN_ID_SRC)
-
-OBJECT_STORAGE_DST = "s3"
-CONN_ID_DST = _AWS_CONN_ID
-KEY_SRC = (
-    _S3_BUCKET
-    + "/"
-    + _STAGE_FOLDER_NAME
-    + "/"
-    + _PRODUCT_INFO_FOLDER_NAME
-    + "/"
-    + _SNOWFLAKE_TABLE_NAME
-)
-
-BASE_SRC_SNEAKERS = ObjectStoragePath(
-    f"{OBJECT_STORAGE_DST}://{KEY_SRC}", conn_id=CONN_ID_DST
-)
-
 
 # branching task IDs
 _CREATE_COLLECTION_TASK_ID = "create_collection"
@@ -78,20 +51,24 @@ _COLLECTION_ALREADY_EXISTS_TASK_ID = "collection_already_exists"
 
 
 @dag(
-    dag_display_name="💚 Load product information: S3 -> Weaviate",
+    dag_display_name="🛠️ Set up Analytics collection",
     start_date=datetime(2024, 8, 1),
-    schedule=(Dataset(BASE_SRC_SNEAKERS.as_uri()) | Dataset(BASE_SRC.as_uri())),
+    schedule=[
+        Dataset(
+            f"s3://{_S3_BUCKET}/{_MOCK_SEARCH_HISTORY_FOLDER}/{_SEARCH_HISTORY_FOLDER}"
+        )
+    ],
     catchup=False,
     default_args={
-        "owner": "DE team",
+        "owner": "Demo team",
         "retries": 3,
         "retry_delay": duration(minutes=1),
     },
     doc_md=__doc__,
-    description="ETL",
-    tags=["transform", "load", "use-case", "demo"],
+    description="Helper",
+    tags=["helper"],
 )
-def transform_load_product_info():
+def setup_analytics_collection():
 
     # --------------- #
     # Set up Weaviate #
@@ -130,7 +107,7 @@ def transform_load_product_info():
 
     check_collection_obj = check_collection(
         conn_id=_WEAVIATE_CONN_ID,
-        collection_name=_WEAVIATE_COLLECTION_NAME_PRODUCT_INFO,
+        collection_name=_WEAVIATE_ANALYTICS_COLLECTION_NAME,
         create_collection_task_id=_CREATE_COLLECTION_TASK_ID,
         collection_already_exists_task_id=_COLLECTION_ALREADY_EXISTS_TASK_ID,
     )
@@ -151,28 +128,27 @@ def transform_load_product_info():
         hook = WeaviateHook(conn_id)
 
         hook.create_collection(
-            name=collection_name,
+            name=_WEAVIATE_ANALYTICS_COLLECTION_NAME,
             vectorizer_config=wvcc.Configure.Vectorizer.text2vec_openai(model="ada"),
             generative_config=wvcc.Configure.Generative.openai(
                 model="gpt-4-1106-preview"
             ),
             properties=[
-                Property(name="title", data_type=DataType.TEXT),
-                Property(name="description", data_type=DataType.TEXT),
+                Property(name="searchterm", data_type=DataType.TEXT),
+                Property(name="timestamp", data_type=DataType.TEXT),
                 Property(
-                    name="file_path", data_type=DataType.TEXT, skip_vectorization=True
+                    name="purchase", data_type=DataType.BOOL, skip_vectorization=True
                 ),
                 Property(
-                    name="price", data_type=DataType.NUMBER, skip_vectorization=True
+                    name="amt", data_type=DataType.NUMBER, skip_vectorization=True
                 ),
-                Property(name="category", data_type=DataType.TEXT),
                 Property(name="uuid", data_type=DataType.UUID, skip_vectorization=True),
             ],
         )
 
     create_collection_obj = create_collection(
         conn_id=_WEAVIATE_CONN_ID,
-        collection_name=_WEAVIATE_COLLECTION_NAME_PRODUCT_INFO,
+        collection_name=_WEAVIATE_ANALYTICS_COLLECTION_NAME,
     )
 
     collection_already_exists = EmptyOperator(
@@ -192,12 +168,12 @@ def transform_load_product_info():
     # ------------------ #
 
     @task
-    def list_folders(path: ObjectStoragePath) -> list[ObjectStoragePath]:
+    def list_files(path: ObjectStoragePath) -> list[ObjectStoragePath]:
         """List files in local object storage."""
-        folders = [f for f in path.iterdir() if f.is_dir()]
+        folders = [f for f in path.iterdir() if f.is_file()]
         return folders
 
-    list_folders_obj = list_folders(path=BASE_SRC)
+    list_files_obj = list_files(path=BASE_SRC)
 
     @task(map_index_template="{{ my_custom_map_index }}")
     def extract_document_text(path: ObjectStoragePath) -> pd.DataFrame:
@@ -222,18 +198,24 @@ def transform_load_product_info():
 
         return df
 
-    extract_document_text_obj = extract_document_text.expand(path=list_folders_obj)
+    extract_document_text_obj = extract_document_text.expand(path=list_files_obj)
 
     ingest_data = WeaviateIngestOperator.partial(
         task_id="ingest_data",
         conn_id=_WEAVIATE_CONN_ID,
-        collection_name="Products",
-        map_index_template="Ingested files from: {{ task.input_data.to_dict()['category'][0] }}.",
+        collection_name=_WEAVIATE_ANALYTICS_COLLECTION_NAME,
     ).expand(input_data=extract_document_text_obj)
 
-    @task(outlets=[Dataset(f"weaviate://{_WEAVIATE_CONN_ID}@Products/")])
+    @task(
+        outlets=[
+            Dataset(
+                f"weaviate://{_WEAVIATE_CONN_ID}@{_WEAVIATE_ANALYTICS_COLLECTION_NAME}/"
+            )
+        ]
+    )
     def ingest_done():
         t_log.info(f"Ingestion done!")
+
 
     # ------------------------------ #
     # Define additional dependencies #
@@ -246,4 +228,4 @@ def transform_load_product_info():
     )
 
 
-transform_load_product_info()
+setup_analytics_collection()
