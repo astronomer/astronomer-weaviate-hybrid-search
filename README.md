@@ -103,6 +103,6 @@ After setting up your project resources you can use the DAGs tagged with `helper
 
 ![Screenshot of the Demo website advanced search page.](/static/website_advanced_search.png)
 
-    You can use the slider between `I know what I want` (full keyword search) and `Looking for ideas` (full vector search) to test different hybrid search settings.
+You can use the slider between `I know what I want` (full keyword search) and `Looking for ideas` (full vector search) to test different hybrid search settings.
 
 5. Optional: If you choose to add a Snowflake connection, you can add a new [Streamlit](https://www.snowflake.com/en/data-cloud/overview/streamlit-in-snowflake/) app in your snowflake account using the demo app located in [`streamlit_app/streamlit_app.py`](streamlit_app/streamlit_app.py) to see a dashboard based on search term analytics.
