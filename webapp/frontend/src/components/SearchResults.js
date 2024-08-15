@@ -131,14 +131,7 @@ const SearchResults = () => {
             </div>
           </label>
 
-          <label className="checkbox-container">
-            <input
-              type="checkbox"
-              checked={generative}
-              onChange={handleToggleChange}
-            />
-            <span className="checkbox-label">Generative Search</span>
-          </label>
+
 
         </div>
       </div>

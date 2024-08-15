@@ -26,7 +26,7 @@ _AWS_CONN_ID = os.getenv("AWS_CONN_ID")
 _S3_BUCKET = os.getenv("S3_BUCKET")
 _INGEST_FOLDER_NAME = os.getenv("INGEST_FOLDER_NAME")
 _STAGE_FOLDER_NAME = os.getenv("STAGE_FOLDER_NAME")
-_IMAGE_FOLDER_NAME = os.getenv("IMAGES_FOLDER_NAME")
+_IMAGE_FOLDER_NAME = os.getenv("IMAGE_FOLDER_NAME")
 
 
 # Creating ObjectStoragePath objects

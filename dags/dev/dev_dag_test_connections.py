@@ -30,7 +30,7 @@ _SNOWFLAKE_SCHEMA_NAME = os.getenv("SNOWFLAKE_SCHEMA_NAME")
 @dag(
     dag_display_name="🛠️ Test Connections",
     start_date=datetime(2024, 8, 1),
-    schedule="@daily",
+    schedule=None,
     catchup=False,
     default_args={"owner": "QA team", "retries": 3, "retry_delay": duration(minutes=1)},
     doc_md=__doc__,

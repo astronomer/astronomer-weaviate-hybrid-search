@@ -66,7 +66,7 @@ def search():
     query = request.args.get("query")
 
     generative = request.args.get("generative", "false").lower() == "true"
-    num_results = int(request.args.get("numResults", 9))
+    num_results = int(request.args.get("numResults", 15))
     category = request.args.get("category", None)
     alpha = float(request.args.get("alpha", 0.5))
 
@@ -76,7 +76,7 @@ def search():
     elif alpha < 0.75:
         auto_limit = 2
     else:
-        auto_limit = 10
+        auto_limit = 50
 
     products = client.collections.get("Products")
 

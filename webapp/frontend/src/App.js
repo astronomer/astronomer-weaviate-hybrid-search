@@ -74,7 +74,7 @@ const Footer = () => (
     <div className="footer-content">
       <div className="footer-section">
         <h4>About Us</h4>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        <p>Why ever even be inside? Create your garden paradise, between flowers and trees!</p>
       </div>
       <div className="footer-section">
         <h4>Customer Service</h4>
