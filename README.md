@@ -65,6 +65,7 @@ You can run and develop DAGs in this environment. Note that you might need to [p
 
 1. Sign up to [Weaviate Cloud](https://console.weaviate.cloud/) for free and [create a cluster](https://weaviate.io/developers/wcs/create-instance).
 2. Sign up to [Astro](http://qrco.de/bfHv2Q) for free and follow the onboarding flow to create a deployment with default configurations.
+3. Deploy the project to Astro using `astro deploy`. See [Deploy code to Astro](https://www.astronomer.io/docs/astro/deploy-code).
 3. Set up your Weaviate, AWS and Snowflake connections, as well as all other environment variables listed in [`.env_example](.env_example) on Astro. For instructions see [Manage Airflow connections and variables](https://www.astronomer.io/docs/astro/manage-connections-variables) and [Manage environment variables on Astro](https://www.astronomer.io/docs/astro/manage-env-vars).
 
 4. Start the webapp project locally, by running `astro dev start`. This will spin up the following local containers:
